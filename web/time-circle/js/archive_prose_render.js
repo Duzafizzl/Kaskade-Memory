@@ -6,7 +6,7 @@
 (function (root) {
   "use strict";
 
-  var ERIP_BLOCK_MARKER = "**ERIP (Pflicht-Tagging):**";
+  var ERIP_BLOCK_MARKER = "**ERIP (required):**";
   var MEINE_NOTIZ_HDR = "**Meine Notiz:**";
 
   function escapeHtml(s) {
