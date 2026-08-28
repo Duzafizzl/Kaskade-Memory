@@ -1,0 +1,12 @@
+# File: demo_channels.yaml
+# Description: Demo channel aliases for recall and core-memory gates.
+# Created: 2026-08-28
+# Last updated: 2026-08-28
+
+channels:
+  - id: work-chat
+    label: Work Chat
+  - id: personal-dm
+    label: Personal DM
+  - id: dm:alex
+    label: DM Alex

@@ -1,0 +1,597 @@
+/**
+ * kaskade_design_tokens.css – Kaska Time Circle CI Design Tokens für stream_dashboard.
+ * Extrahiert aus cascade_time_circle.html, Bloomberg/Index/Graph-Panels, clicky_ui.css.
+ * Created: 2026-06-30
+ * Last updated: 2026-08-09 (exclude fixed overlays from board stacking)
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Colors — Base */
+  --kaskade-bg: #1d191a;
+  --kaskade-bg-stage: #1b1819;
+  --kaskade-bg-elevated: rgba(20, 18, 19, 0.96);
+  --kaskade-bg-panel: rgba(18, 16, 17, 0.94);
+  --kaskade-bg-panel-deep: rgba(12, 10, 11, 0.96);
+  --kaskade-bg-panel-modal: rgba(12, 10, 11, 0.97);
+  --kaskade-bg-input: rgba(0, 0, 0, 0.35);
+  --kaskade-bg-overlay: rgba(0, 0, 0, 0.58);
+  --kaskade-bg-overlay-heavy: rgba(0, 0, 0, 0.85);
+  --kaskade-surface: #141214;
+  --kaskade-surface-raised: #1a1718;
+  --kaskade-surface-inset: #161314;
+  --kaskade-surface-card: rgba(255, 255, 255, 0.065);
+  --kaskade-surface-card-active: rgba(65, 220, 225, 0.08);
+  --kaskade-card: #141214;
+  --kaskade-ring: #211d1e;
+  --kaskade-paper: #eeecea;
+
+  /* Colors — Text */
+  --kaskade-ink: #f1efed;
+  --kaskade-ink-soft: rgba(255, 255, 255, 0.88);
+  --kaskade-ink-faint: rgba(255, 255, 255, 0.78);
+  --kaskade-muted: rgba(241, 239, 237, 0.6);
+  --kaskade-muted-soft: rgba(255, 255, 255, 0.55);
+  --kaskade-muted-faint: rgba(255, 255, 255, 0.45);
+  --kaskade-muted-ghost: rgba(255, 255, 255, 0.38);
+
+  /* Colors — Accent (Time Circle CI) */
+  --kaskade-cyan: #41dce1;
+  --kaskade-pink: #ef597a;
+  --kaskade-orange: #dc8546;
+  --kaskade-green: #9dc76d;
+  --kaskade-blue: #6a8fd8;
+  --kaskade-purple: #a855f7;
+  --kaskade-red: #ff8a8a;
+  --kaskade-gold: #fbbf24;
+  --kaskade-green-20: rgba(157, 199, 109, 0.2);
+
+  /* Colors — Accent Alpha */
+  --kaskade-cyan-08: rgba(65, 220, 225, 0.08);
+  --kaskade-cyan-10: rgba(65, 220, 225, 0.1);
+  --kaskade-cyan-12: rgba(65, 220, 225, 0.12);
+  --kaskade-cyan-14: rgba(65, 220, 225, 0.14);
+  --kaskade-cyan-20: rgba(65, 220, 225, 0.2);
+  --kaskade-cyan-22: rgba(65, 220, 225, 0.22);
+  --kaskade-cyan-25: rgba(65, 220, 225, 0.25);
+  --kaskade-cyan-35: rgba(65, 220, 225, 0.35);
+  --kaskade-cyan-45: rgba(65, 220, 225, 0.45);
+  --kaskade-cyan-55: rgba(65, 220, 225, 0.55);
+  --kaskade-cyan-65: rgba(65, 220, 225, 0.65);
+  --kaskade-cyan-75: rgba(65, 220, 225, 0.75);
+  --kaskade-pink-08: rgba(239, 89, 122, 0.08);
+  --kaskade-pink-40: rgba(239, 89, 122, 0.4);
+  --kaskade-pink-45: rgba(239, 89, 122, 0.45);
+  --kaskade-purple-12: rgba(168, 85, 247, 0.12);
+  --kaskade-purple-20: rgba(168, 85, 247, 0.2);
+  --kaskade-purple-40: rgba(168, 85, 247, 0.4);
+  --kaskade-purple-45: rgba(168, 85, 247, 0.45);
+  --kaskade-orange-12: rgba(220, 133, 70, 0.12);
+  --kaskade-orange-15: rgba(220, 133, 70, 0.15);
+  --kaskade-orange-45: rgba(220, 133, 70, 0.45);
+  --kaskade-white-04: rgba(255, 255, 255, 0.04);
+  --kaskade-white-06: rgba(255, 255, 255, 0.06);
+  --kaskade-white-08: rgba(255, 255, 255, 0.08);
+  --kaskade-white-10: rgba(255, 255, 255, 0.1);
+  --kaskade-white-14: rgba(255, 255, 255, 0.14);
+  --kaskade-white-16: rgba(255, 255, 255, 0.16);
+  --kaskade-white-18: rgba(255, 255, 255, 0.18);
+  --kaskade-white-22: rgba(255, 255, 255, 0.22);
+  --kaskade-white-25: rgba(255, 255, 255, 0.25);
+
+  /* Typography — Families */
+  --kaskade-font-display: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --kaskade-font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --kaskade-font-mono: "SFMono-Regular", Consolas, "Ubuntu Mono", "JetBrains Mono", monospace;
+
+  /* Typography — Scale */
+  --kaskade-text-2xs: 8px;
+  --kaskade-text-xs: 9px;
+  --kaskade-text-sm: 10px;
+  --kaskade-text-base: 11px;
+  --kaskade-text-md: 12px;
+  --kaskade-text-lg: 13px;
+  --kaskade-text-xl: 28px;
+  --kaskade-text-display: clamp(34px, 5vw, 72px);
+
+  /* Typography — Tracking */
+  --kaskade-track-tight: -0.08em;
+  --kaskade-track-normal: 0.02em;
+  --kaskade-track-wide: 0.08em;
+  --kaskade-track-wider: 0.14em;
+  --kaskade-track-widest: 0.22em;
+
+  /* Spacing */
+  --kaskade-space-2xs: 4px;
+  --kaskade-space-xs: 6px;
+  --kaskade-space-sm: 8px;
+  --kaskade-space-md: 10px;
+  --kaskade-space-lg: 12px;
+  --kaskade-space-xl: 14px;
+  --kaskade-space-2xl: 16px;
+  --kaskade-space-3xl: 18px;
+  --kaskade-space-4xl: 28px;
+  --kaskade-space-gutter: 34px;
+  --kaskade-space-safe-bottom: env(safe-area-inset-bottom);
+  --kaskade-space-safe-top: env(safe-area-inset-top);
+
+  /* Radius */
+  --kaskade-radius-none: 0;
+  --kaskade-radius-sm: 4px;
+  --kaskade-radius-md: 10px;
+  --kaskade-radius-lg: 12px;
+  --kaskade-radius-pill: 999px;
+
+  /* Borders */
+  --kaskade-border-subtle: var(--kaskade-white-08);
+  --kaskade-border: var(--kaskade-white-18);
+  --kaskade-border-strong: var(--kaskade-white-25);
+  --kaskade-border-cyan: var(--kaskade-cyan-45);
+  --kaskade-border-pink: var(--kaskade-pink-45);
+  --kaskade-border-purple: var(--kaskade-purple-45);
+
+  /* Effects — Shadow */
+  --kaskade-shadow-panel:
+    0 28px 90px rgba(0, 0, 0, 0.82),
+    0 0 0 9999px rgba(0, 0, 0, 0.12);
+  --kaskade-shadow-index:
+    0 20px 60px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px var(--kaskade-white-06);
+  --kaskade-shadow-modal:
+    0 32px 100px rgba(0, 0, 0, 0.88),
+    inset 0 0 0 1px var(--kaskade-white-06);
+  --kaskade-shadow-glow-cyan: 0 0 8px rgba(65, 220, 225, 0.45);
+  --kaskade-shadow-glow-pink: 0 0 0 1px var(--kaskade-pink-40);
+
+  /* Effects — Gradient */
+  --kaskade-gradient-progress: linear-gradient(90deg, var(--kaskade-cyan), var(--kaskade-pink), var(--kaskade-orange));
+  --kaskade-gradient-vignette:
+    radial-gradient(ellipse 52% 62% at 67% 50%, transparent 0%, transparent 28%, rgba(0, 0, 0, 0.18) 52%, rgba(0, 0, 0, 0.48) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0%, transparent 42%);
+  --kaskade-gradient-ambient:
+    radial-gradient(circle at 35% 50%, rgba(255, 255, 255, 0.04), transparent 34%),
+    radial-gradient(circle at 70% 50%, rgba(65, 220, 225, 0.06), transparent 28%);
+  --kaskade-gradient-focus-beam: linear-gradient(90deg, rgba(65, 220, 225, 0.95) 0%, rgba(65, 220, 225, 0.55) 55%, rgba(65, 220, 225, 0.08) 100%);
+
+  /* Motion */
+  --kaskade-ease: ease;
+  --kaskade-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --kaskade-duration-fast: 60ms;
+  --kaskade-duration: 150ms;
+  --kaskade-duration-panel: 220ms;
+  --kaskade-duration-wheel: 60ms;
+
+  /* Z-Index */
+  --kaskade-z-vignette: 12;
+  --kaskade-z-title: 20;
+  --kaskade-z-progress: 20;
+  --kaskade-z-panel: 45;
+  --kaskade-z-index-dash: 46;
+  --kaskade-z-readout: 30;
+  --kaskade-z-bloomberg: 55;
+  --kaskade-z-modal-backdrop: 200;
+  --kaskade-z-modal: 210;
+
+  /* Time Circle — Ring Geometry (vmin, page-specific overrides OK) */
+  --kaskade-ring-core: 27.5vmin;
+  --kaskade-ring-phase-in: 22.2vmin;
+  --kaskade-ring-phase-out: 26.8vmin;
+  --kaskade-ring-spur: 33.8vmin;
+  --kaskade-ring-text: 40.5vmin;
+  --kaskade-ring-inner: 33.8vmin;
+  --kaskade-ring-outer: 42.6vmin;
+  --kaskade-bar-dock: 59.3vmin;
+  --kaskade-step-deg: 3.58deg;
+
+  /* Component — Readout */
+  --kaskade-readout-bg: rgba(29, 25, 26, 0.92);
+  --kaskade-readout-border: var(--kaskade-border);
+  --kaskade-readout-padding: var(--kaskade-space-2xl) var(--kaskade-space-3xl);
+
+  /* Component — Index Dashboard */
+  --kaskade-idx-bg: var(--kaskade-bg-panel-deep);
+  --kaskade-idx-border: var(--kaskade-border-pink);
+  --kaskade-idx-badge-color: var(--kaskade-pink);
+  --kaskade-idx-value-color: var(--kaskade-cyan);
+
+  /* Component — Inline Tree / Graph Panel */
+  --kaskade-tree-bg: rgba(18, 16, 17, 0.94);
+  --kaskade-tree-border: var(--kaskade-border-strong);
+  --kaskade-tree-padding: var(--kaskade-space-3xl);
+  --kaskade-tree-kicker-color: rgba(255, 255, 255, 0.72);
+
+  /* Component — Bloomberg Modal */
+  --kaskade-bb-trigger-bg: var(--kaskade-bg-panel);
+  --kaskade-bb-trigger-border: var(--kaskade-border-purple);
+  --kaskade-bb-modal-bg: var(--kaskade-bg-panel-modal);
+  --kaskade-bb-tab-active-border: var(--kaskade-cyan-65);
+  --kaskade-bb-tab-active-bg: var(--kaskade-cyan-10);
+
+  /* Component — Form / Chip */
+  --kaskade-input-bg: var(--kaskade-bg-input);
+  --kaskade-chip-bg: var(--kaskade-white-05, rgba(255, 255, 255, 0.05));
+  --kaskade-chip-border: var(--kaskade-white-18);
+  --kaskade-chip-active-border: var(--kaskade-cyan);
+  --kaskade-chip-active-bg: var(--kaskade-cyan-14);
+
+  /* Component — Tag / Filter */
+  --kaskade-filter-theme-border: var(--kaskade-purple-40);
+  --kaskade-filter-person-border: var(--kaskade-cyan-45);
+  --kaskade-filter-active-color: #c4b5fd;
+
+  /* Prose (Archive / Graph panels) */
+  --kaskade-prose-body: #dcdcd9;
+  --kaskade-prose-heading: var(--kaskade-ink);
+  --kaskade-prose-heading-accent: var(--kaskade-blue);
+  --kaskade-prose-kicker: var(--kaskade-cyan);
+  --kaskade-prose-strong: var(--kaskade-ink);
+  --kaskade-prose-meta: var(--kaskade-muted-soft);
+  --kaskade-on-cyan: #1d191a;
+}
+
+/* ─── Legacy Aliases (stream_dashboard pages) ────────────────────────────── */
+
+:root {
+  --bg: var(--kaskade-bg);
+  --ink: var(--kaskade-ink);
+  --text: var(--kaskade-ink);
+  --muted: var(--kaskade-muted);
+  --panel: var(--kaskade-bg-panel);
+  --card: var(--kaskade-surface);
+  --border: var(--kaskade-border-subtle);
+  --paper: var(--kaskade-paper);
+  --ring: var(--kaskade-ring);
+  --cyan: var(--kaskade-cyan);
+  --pink: var(--kaskade-pink);
+  --orange: var(--kaskade-orange);
+  --green: var(--kaskade-green);
+  --blue: var(--kaskade-blue);
+  --purple: var(--kaskade-purple);
+  --teal: var(--kaskade-cyan);
+  --accent: var(--kaskade-cyan);
+  --red: var(--kaskade-red);
+  --mono: var(--kaskade-font-mono);
+
+  /* Time Circle ring geometry (cascade_time_circle.html) */
+  --ring-core: var(--kaskade-ring-core);
+  --ring-phase-in: var(--kaskade-ring-phase-in);
+  --ring-phase-out: var(--kaskade-ring-phase-out);
+  --ring-spur: var(--kaskade-ring-spur);
+  --ring-text: var(--kaskade-ring-text);
+  --ring-inner: var(--kaskade-ring-inner);
+  --ring-outer: var(--kaskade-ring-outer);
+  --bar-dock: var(--kaskade-bar-dock);
+  --step: var(--kaskade-step-deg);
+  --focus-deg: -18deg;
+}
+
+/* ─── Board Shell (body.kaskade-board) ─────────────────────────────────────── */
+
+body.kaskade-board {
+  background: var(--kaskade-bg);
+  color: var(--kaskade-ink);
+  font-family: var(--kaskade-font-display);
+  letter-spacing: var(--kaskade-track-normal);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.kaskade-board::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--kaskade-gradient-ambient);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Stacking for page content above ambient gradient.
+   Do NOT force position/z-index on fixed overlays/modals — that breaks
+   position:fixed (e.g. /stream/archive modal opened at document bottom). */
+body.kaskade-board > *:not(.archive-overlay):not(.graph-modal-overlay):not(.plan-modal-overlay) {
+  position: relative;
+  z-index: 1;
+}
+
+body.kaskade-board > .archive-overlay,
+body.kaskade-board > .graph-modal-overlay,
+body.kaskade-board > .plan-modal-overlay {
+  position: fixed;
+  z-index: 10000;
+}
+
+/* ─── HeyClicky overrides (Kaska palette statt Blau) ─────────────────────── */
+
+body.kaskade-board .clicky-glow-active {
+  box-shadow:
+    0 0 0 1px var(--kaskade-cyan-45),
+    0 0 28px var(--kaskade-cyan-20),
+    inset 0 0 24px var(--kaskade-cyan-08);
+}
+
+body.kaskade-board .clicky-glow-success {
+  box-shadow:
+    0 0 0 1px rgba(157, 199, 109, 0.45),
+    0 0 24px rgba(157, 199, 109, 0.18);
+}
+
+body.kaskade-board .clicky-glow-error {
+  box-shadow:
+    0 0 0 1px rgba(255, 138, 138, 0.5),
+    0 0 24px rgba(255, 138, 138, 0.2);
+}
+
+body.kaskade-board .clicky-phase-bar {
+  background: var(--kaskade-bg-panel);
+  border-color: var(--kaskade-border);
+  color: var(--kaskade-muted);
+}
+
+body.kaskade-board .clicky-phase-bar .clicky-phase-label,
+body.kaskade-board .clicky-phase-bar[data-phase="working"] .clicky-phase-label,
+body.kaskade-board .clicky-phase-bar[data-phase="think"] .clicky-phase-label {
+  color: var(--kaskade-cyan);
+}
+
+body.kaskade-board .clicky-phase-bar[data-phase="success"] .clicky-phase-label {
+  color: var(--kaskade-green);
+}
+
+body.kaskade-board .clicky-phase-bar[data-phase="error"] .clicky-phase-label {
+  color: var(--kaskade-red);
+}
+
+body.kaskade-board .clicky-waveform span,
+body.kaskade-board .clicky-dots span {
+  background: var(--kaskade-cyan);
+}
+
+body.kaskade-board .clicky-toast {
+  background: var(--kaskade-bg-panel-deep);
+  border-color: var(--kaskade-border);
+  color: var(--kaskade-ink);
+}
+
+body.kaskade-board .clicky-toast.success { border-color: rgba(157, 199, 109, 0.45); }
+body.kaskade-board .clicky-toast.error { border-color: rgba(255, 138, 138, 0.5); }
+body.kaskade-board .clicky-toast.info { border-color: var(--kaskade-cyan-45); }
+
+body.kaskade-board .clicky-progress-hairline {
+  background: var(--kaskade-gradient-progress);
+  box-shadow: 0 0 12px var(--kaskade-cyan-45);
+}
+
+body.kaskade-board .clicky-scroll-tick {
+  box-shadow: inset 0 0 0 1px var(--kaskade-cyan-35);
+}
+
+body.kaskade-board .clicky-scroll-snap-active {
+  outline-color: var(--kaskade-cyan-45);
+  background-color: var(--kaskade-cyan-08);
+}
+
+/* ─── Board Chrome (Stream-Dashboard Shell) ──────────────────────────────── */
+
+body.kaskade-board .kaskade-header,
+body.kaskade-board header.kaskade-header,
+body.kaskade-board .archive-header {
+  background: var(--kaskade-bg-panel);
+  border-bottom: 1px solid var(--kaskade-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body.kaskade-board .kaskade-header h1,
+body.kaskade-board header.kaskade-header h1,
+body.kaskade-board .archive-title {
+  font-family: var(--kaskade-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--kaskade-track-tight);
+  color: var(--kaskade-ink);
+}
+
+body.kaskade-board .kaskade-mono,
+body.kaskade-board .side,
+body.kaskade-board aside,
+body.kaskade-board button,
+body.kaskade-board input,
+body.kaskade-board select,
+body.kaskade-board textarea,
+body.kaskade-board .archive-search,
+body.kaskade-board .archive-tag-select,
+body.kaskade-board .archive-search-btn,
+body.kaskade-board .archive-load-more,
+body.kaskade-board .archive-back,
+body.kaskade-board .status,
+body.kaskade-board .log,
+body.kaskade-board label,
+body.kaskade-board .det-card,
+body.kaskade-board .section h2 {
+  font-family: var(--kaskade-font-mono);
+}
+
+body.kaskade-board .kaskade-panel-surface,
+body.kaskade-board .video-wrap,
+body.kaskade-board .det-card,
+body.kaskade-board .archive-card,
+body.kaskade-board .archive-modal {
+  background: var(--kaskade-bg-panel);
+  border: 1px solid var(--kaskade-border);
+}
+
+body.kaskade-board button,
+body.kaskade-board .btn,
+body.kaskade-board .archive-back,
+body.kaskade-board .archive-search-btn,
+body.kaskade-board .archive-load-more {
+  border: 1px solid var(--kaskade-border);
+  background: var(--kaskade-bg-panel);
+  color: var(--kaskade-ink);
+  border-radius: var(--kaskade-radius-none);
+  text-transform: uppercase;
+  letter-spacing: var(--kaskade-track-wide);
+  transition: border-color var(--kaskade-duration) var(--kaskade-ease),
+    background var(--kaskade-duration) var(--kaskade-ease);
+}
+
+body.kaskade-board button:hover,
+body.kaskade-board .btn:hover,
+body.kaskade-board .archive-back:hover,
+body.kaskade-board .archive-search-btn:hover:not(:disabled),
+body.kaskade-board .archive-load-more:hover:not(:disabled) {
+  border-color: var(--kaskade-cyan);
+  background: var(--kaskade-cyan-10);
+}
+
+body.kaskade-board button.primary,
+body.kaskade-board .archive-search-btn,
+body.kaskade-board .archive-load-more {
+  border-color: var(--kaskade-cyan-45);
+  background: var(--kaskade-cyan-10);
+  color: var(--kaskade-cyan);
+}
+
+body.kaskade-board input[type="text"],
+body.kaskade-board input[type="search"],
+body.kaskade-board textarea,
+body.kaskade-board select,
+body.kaskade-board .archive-search,
+body.kaskade-board .archive-tag-select {
+  background: var(--kaskade-bg-input);
+  border: 1px solid var(--kaskade-border);
+  color: var(--kaskade-ink);
+  border-radius: var(--kaskade-radius-none);
+}
+
+body.kaskade-board input:focus,
+body.kaskade-board textarea:focus,
+body.kaskade-board select:focus,
+body.kaskade-board .archive-search:focus,
+body.kaskade-board .archive-tag-select:focus {
+  outline: none;
+  border-color: var(--kaskade-cyan-45);
+}
+
+body.kaskade-board a {
+  color: var(--kaskade-cyan);
+  text-decoration: none;
+}
+
+body.kaskade-board a:hover {
+  color: var(--kaskade-pink);
+}
+
+/* ─── Reusable Component Classes ─────────────────────────────────────────── */
+
+.kaskade-panel {
+  padding: var(--kaskade-tree-padding);
+  background: var(--kaskade-tree-bg);
+  border: 1px solid var(--kaskade-tree-border);
+  box-shadow: var(--kaskade-shadow-panel);
+}
+
+.kaskade-panel-kicker {
+  display: block;
+  margin-bottom: var(--kaskade-space-xl);
+  color: var(--kaskade-tree-kicker-color);
+  font: var(--kaskade-text-sm)/1 var(--kaskade-font-mono);
+  letter-spacing: var(--kaskade-track-widest);
+  text-transform: uppercase;
+}
+
+.kaskade-readout {
+  padding: var(--kaskade-readout-padding);
+  border: 1px solid var(--kaskade-readout-border);
+  background: var(--kaskade-readout-bg);
+  text-transform: uppercase;
+}
+
+.kaskade-btn {
+  padding: var(--kaskade-space-md) var(--kaskade-space-lg);
+  border: 1px solid var(--kaskade-border-cyan);
+  background: var(--kaskade-cyan-10);
+  color: var(--kaskade-ink);
+  font: var(--kaskade-text-sm)/1.2 var(--kaskade-font-mono);
+  letter-spacing: var(--kaskade-track-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--kaskade-duration) var(--kaskade-ease),
+    border-color var(--kaskade-duration) var(--kaskade-ease);
+}
+
+.kaskade-btn:hover {
+  background: var(--kaskade-cyan-20);
+}
+
+.kaskade-chip {
+  padding: 5px var(--kaskade-space-sm);
+  border: 1px solid var(--kaskade-chip-border);
+  background: var(--kaskade-chip-bg);
+  color: var(--kaskade-ink-faint);
+  font: var(--kaskade-text-xs)/1 var(--kaskade-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--kaskade-duration) var(--kaskade-ease),
+    border-color var(--kaskade-duration) var(--kaskade-ease);
+}
+
+.kaskade-chip:hover {
+  background: var(--kaskade-white-10);
+}
+
+.kaskade-chip.active {
+  border-color: var(--kaskade-chip-active-border);
+  background: var(--kaskade-chip-active-bg);
+  color: var(--kaskade-ink);
+}
+
+.kaskade-input {
+  width: 100%;
+  padding: var(--kaskade-space-xs) var(--kaskade-space-sm);
+  border: 1px solid var(--kaskade-border);
+  background: var(--kaskade-input-bg);
+  color: var(--kaskade-ink);
+  font: var(--kaskade-text-sm)/1.3 var(--kaskade-font-mono);
+}
+
+.kaskade-input:focus {
+  outline: none;
+  border-color: var(--kaskade-border-cyan);
+}
+
+.kaskade-progress-hairline {
+  height: 3px;
+  background: var(--kaskade-white-16);
+}
+
+.kaskade-progress-hairline::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: calc(var(--progress, 0) * 100%);
+  background: var(--kaskade-gradient-progress);
+}
+
+.kaskade-badge-pink {
+  font: var(--kaskade-text-xs)/1 var(--kaskade-font-mono);
+  letter-spacing: var(--kaskade-track-widest);
+  color: var(--kaskade-idx-badge-color);
+  padding: var(--kaskade-space-2xs) var(--kaskade-space-sm);
+  border: 1px solid var(--kaskade-pink-40);
+  background: var(--kaskade-pink-08);
+}
+
+.kaskade-badge-cyan {
+  color: var(--kaskade-cyan);
+  font-family: var(--kaskade-font-mono);
+}
+
+.kaskade-mono-label {
+  font-family: var(--kaskade-font-mono);
+  font-size: var(--kaskade-text-xs);
+  letter-spacing: var(--kaskade-track-wider);
+  text-transform: uppercase;
+  color: var(--kaskade-muted-faint);
+}

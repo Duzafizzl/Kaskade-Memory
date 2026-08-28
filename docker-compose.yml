@@ -1,0 +1,28 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: kaskade
+      POSTGRES_PASSWORD: kaskade
+      POSTGRES_DB: kaskade
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaskade"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://kaskade:kaskade@db:5432/kaskade
+      KASKADE_DEMO_MODE: "1"
+      KASKADE_EOD_AGENT_PROVIDER: noop
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python demo/seed.py && uvicorn api.main:app --host 0.0.0.0 --port 8080"

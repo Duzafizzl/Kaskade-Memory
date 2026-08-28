@@ -1,0 +1,3214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <!-- File: cascade_time_circle.html | Kaska Time Circle — Scroll-Rad mit Kaskade/MMA-Daten. Created: 2026-06-28. Last updated: 2026-06-30 (ring geometry legacy aliases fix) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kaskade Memory · Time Circle</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/stream/css/kaskade_design_tokens.css?v=20260630tc2">
+  <style>
+    :root {
+      /* Runtime state — JS updates via setProperty */
+      --progress: 0;
+      --rotation: -18deg;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 430vh;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: .02em;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 35% 50%, rgba(255,255,255,.04), transparent 34%),
+        radial-gradient(circle at 70% 50%, rgba(65,220,225,.06), transparent 28%);
+      pointer-events: none;
+    }
+    .stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: #1b1819;
+    }
+    .title {
+      position: fixed;
+      z-index: 20;
+      left: 28px;
+      top: 28px;
+      text-transform: uppercase;
+    }
+    .title p { margin: 0 0 8px; color: var(--muted); font-size: 10px; letter-spacing: .32em; }
+    .title h1 { margin: 0; font-size: clamp(34px, 5vw, 72px); line-height: .86; letter-spacing: -.08em; }
+    .title small {
+      display: block;
+      max-width: 360px;
+      margin-top: 14px;
+      color: rgba(255,255,255,.55);
+      font-size: 10px;
+      line-height: 1.45;
+      letter-spacing: .14em;
+    }
+    .readout {
+      position: fixed;
+      right: 30px;
+      bottom: 28px;
+      z-index: 30;
+      width: min(330px, calc(100vw - 48px));
+      padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(29,25,26,.92);
+      text-transform: uppercase;
+    }
+    .readout strong { display: block; font-size: 50px; line-height: .86; letter-spacing: -.08em; }
+    .readout .phase-readout {
+      display: block;
+      margin-top: 8px;
+      color: var(--cyan);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+    }
+    .readout span { display: block; margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.45; letter-spacing: .13em; }
+    .readout .cascade-filter-bar {
+      margin-top: 10px;
+      position: relative;
+      text-transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .readout .cascade-filter-bar input {
+      width: 100%;
+      padding: 6px 8px;
+      background: rgba(0,0,0,.35);
+      color: #fff;
+      font: 10px/1.3 "SFMono-Regular", Consolas, monospace;
+      text-transform: none;
+    }
+    .readout .cascade-filter-bar input[data-filter="theme"] {
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+    .readout .cascade-filter-bar input[data-filter="person"] {
+      border: 1px solid rgba(65, 220, 225, 0.4);
+    }
+    .readout .filter-drop {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      margin-top: 4px;
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(20,18,19,.96);
+      z-index: 40;
+    }
+    .readout .filter-drop button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 6px 8px;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: transparent;
+      color: rgba(255,255,255,.85);
+      font: 10px/1.3 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+      text-transform: none;
+    }
+    .readout .filter-drop button:hover { background: rgba(168, 85, 247, 0.2); }
+    .readout .filter-drop button[data-kind="person"]:hover { background: rgba(65, 220, 225, 0.2); }
+    .readout .filter-active {
+      display: block;
+      margin-top: 6px;
+      font-size: 9px;
+      color: #c4b5fd;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .progress {
+      position: fixed;
+      left: 28px;
+      bottom: 30px;
+      z-index: 20;
+      width: min(330px, calc(100vw - 56px));
+      height: 3px;
+      background: rgba(255,255,255,.16);
+    }
+    .progress::after {
+      content: "";
+      display: block;
+      height: 100%;
+      width: calc(var(--progress) * 100%);
+      background: linear-gradient(90deg, var(--cyan), var(--pink), var(--orange));
+    }
+
+    /* Scharfe Opacity-Vignette — kein Blur (Konzept-Screenshot) */
+    .focus-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 12;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 52% 62% at 67% 50%, transparent 0%, transparent 28%, rgba(0,0,0,.18) 52%, rgba(0,0,0,.48) 100%),
+        linear-gradient(90deg, rgba(0,0,0,.35) 0%, transparent 42%);
+    }
+
+    .wheel {
+      position: absolute;
+      left: -38vmin;
+      top: 50%;
+      width: min(145vmin, 1360px);
+      aspect-ratio: 1;
+      transform: translateY(-50%) rotate(var(--rotation));
+      transition: transform 60ms linear;
+    }
+    .circle, .bars, .ticks, .dots, .threads, .bands, .anchors, .network, .focus-beam-wrap, .ring-segments, .data, .phase-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+    }
+    .network { overflow: visible; opacity: .55; pointer-events: none; z-index: 20; }
+    .network path { fill: none; stroke: var(--c); stroke-width: .85; stroke-opacity: .35; stroke-linecap: round; }
+    .network path.hot { stroke-width: 1.6; stroke-opacity: .88; }
+    .network circle { fill: var(--c); opacity: .85; stroke: #1d191a; stroke-width: 1.5; }
+
+    .circle {
+      background: radial-gradient(
+        circle,
+        transparent 0 37.5%,
+        rgba(255,255,255,.08) 37.7% 38%,
+        transparent 38.2% 46.5%,
+        var(--ring) 46.6% 58.8%,
+        rgba(255,255,255,.19) 58.9% 59.35%,
+        transparent 59.5% 100%
+      );
+    }
+    .circle::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle, transparent calc(30.6% - .09%), rgba(255,255,255,.07) 30.6%, transparent calc(30.6% + .09%)),
+        radial-gradient(circle, transparent calc(37% - .09%), rgba(255,255,255,.05) 37%, transparent calc(37% + .09%)),
+        radial-gradient(circle, transparent calc(37.9% - .09%), rgba(255,255,255,.11) 37.9%, transparent calc(37.9% + .09%)),
+        radial-gradient(circle, transparent calc(46.6% - .09%), rgba(255,255,255,.09) 46.6%, transparent calc(46.6% + .09%)),
+        radial-gradient(circle, transparent calc(55.9% - .09%), rgba(255,255,255,.06) 55.9%, transparent calc(55.9% + .09%)),
+        radial-gradient(circle, transparent calc(58.8% - .09%), rgba(255,255,255,.05) 58.8%, transparent calc(58.8% + .09%));
+    }
+    .circle::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      background: cosam-gradient(
+        from 250deg,
+        transparent 0 266deg, rgba(65,220,225,.75) 267deg 269deg, transparent 270deg 294deg,
+        rgba(239,89,122,.85) 295deg 297deg, transparent 298deg 318deg,
+        rgba(220,133,70,.75) 319deg 321deg, transparent 322deg 360deg
+      );
+      mask: radial-gradient(circle, transparent 0 58.6%, #000 58.8% 60.4%, transparent 60.6%);
+    }
+
+    /* Ring-Segmente: Schrift läuft IM grauen Reifen entlang der Bogenpfade */
+    .ring-segments {
+      overflow: visible;
+      z-index: 8;
+      pointer-events: none;
+    }
+    .ring-segments .seg-area {
+      fill: rgba(255,255,255,.008);
+      stroke: rgba(255,255,255,.045);
+      stroke-width: .45;
+      pointer-events: all;
+      cursor: pointer;
+      transition: fill .15s ease, stroke .15s ease;
+    }
+    .ring-segments .seg-area.active {
+      fill: rgba(255,255,255,.04);
+      stroke: rgba(255,255,255,.14);
+    }
+
+    /* Phasenring — Herzschlag-Bögen (von–bis), im Fokus radial größer gezogen */
+    .phase-ring {
+      z-index: 7;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .phase-ring .phase-arc {
+      fill: rgba(65, 220, 225, .05);
+      stroke: rgba(65, 220, 225, .2);
+      stroke-width: .55;
+      transition: opacity .15s ease, fill .15s ease, stroke .15s ease;
+    }
+    .phase-ring .phase-arc.week {
+      fill: rgba(255, 255, 255, .03);
+      stroke: rgba(255, 255, 255, .1);
+      stroke-width: .35;
+    }
+    .phase-ring .phase-arc.month.active {
+      fill: rgba(65, 220, 225, .24);
+      stroke: rgba(65, 220, 225, .9);
+      stroke-width: 1.35;
+      filter: drop-shadow(0 0 8px rgba(65, 220, 225, .45));
+    }
+    .phase-ring .phase-arc.week.active {
+      fill: rgba(255, 255, 255, .16);
+      stroke: rgba(255, 255, 255, .62);
+      stroke-width: .75;
+    }
+    .phase-ring .phase-label {
+      fill: rgba(255, 255, 255, .42);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 8.5px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .phase-ring .phase-label.active {
+      fill: #fff;
+      font-size: 11px;
+      letter-spacing: .1em;
+    }
+
+    /* Schriftring — im Reifenband, hinter dem Spur-Punkt nach außen */
+    .data { z-index: 22; pointer-events: none; }
+    .anchors { z-index: 21; pointer-events: none; }
+    .data button {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+      display: block;
+      width: auto;
+      max-width: 190px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.78);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: calc(8px + var(--focus, 1) * 1.05px);
+      line-height: 1.28;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: .035em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      pointer-events: all;
+      opacity: calc(.14 + var(--fade, 1) * .86);
+      transform: rotate(var(--a)) translateX(calc(var(--ring-text) + var(--label-stagger, 0px)));
+      transition: font-size .15s ease, color .15s ease, opacity .15s ease, text-shadow .15s ease;
+    }
+    .data button.near {
+      max-width: 200px;
+      white-space: pre-line;
+      line-height: 1.2;
+      font-size: calc(9px + var(--focus, 1) * .85px);
+    }
+    .data button:hover,
+    .data button.active {
+      color: #fff;
+      opacity: 1;
+      z-index: 40;
+      white-space: pre-line;
+      line-height: 1.22;
+      max-width: 210px;
+      overflow: visible;
+      text-overflow: clip;
+      text-shadow:
+        0 0 6px rgba(255,255,255,.85),
+        0 0 16px rgba(255,255,255,.45),
+        0 0 28px rgba(255,255,255,.22);
+    }
+    .data button.label-hidden {
+      opacity: 0.06 !important;
+      pointer-events: none;
+      max-width: 0;
+      overflow: hidden;
+    }
+    .data button.label-compact {
+      font-size: 7px !important;
+      max-width: 110px;
+      letter-spacing: .02em;
+    }
+    .data button.label-full {
+      max-width: 220px;
+    }
+    .data button.active {
+      font-size: 13px;
+      line-height: 1.22;
+      letter-spacing: .04em;
+    }
+
+    .anchors button {
+      width: calc(5px + var(--focus, 1) * .9px);
+      height: calc(5px + var(--focus, 1) * .9px);
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: var(--c);
+      cursor: pointer;
+      /* Mittelpunkt exakt auf Spur-Radius — Verbindungslinien docken hier an */
+      transform: rotate(var(--a)) translateX(var(--ring-spur)) translate(-50%, -50%);
+      box-shadow: 0 0 0 2px #1d191a;
+      opacity: calc(.22 + var(--fade, 1) * .78);
+      transition: opacity .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    .anchors button.active {
+      transform: rotate(var(--a)) translateX(var(--ring-spur)) translate(-50%, -50%) scale(calc(1.15 + var(--focus, 1) * .12));
+      opacity: 1;
+      box-shadow: 0 0 0 2px #1d191a, 0 0 10px var(--c);
+    }
+
+    .bars button, .ticks i, .dots button, .threads i, .bands i, .anchors button, .data button {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+      display: block;
+      font-style: normal;
+    }
+
+    .bars button {
+      width: calc(var(--len) * var(--focus, 1));
+      height: calc(2px + var(--focus, 1) * 1.2px);
+      padding: 0;
+      border: 0;
+      background: var(--paper);
+      opacity: calc(var(--alpha) * var(--fade, 1));
+      cursor: pointer;
+      transform: rotate(var(--a)) translateX(var(--bar-dock));
+      box-shadow: 12px 0 0 rgba(255,255,255, calc(.08 + var(--fade, 1) * .24));
+      transition: width .15s ease, height .15s ease, opacity .15s ease, background .15s ease;
+    }
+    .bars button:nth-child(7n) { background: rgba(255,255,255,.52); }
+    .bars button:nth-child(11n) { background: #111; box-shadow: 14px 0 0 rgba(255,255,255,.38); }
+    .bars button.active {
+      height: 7px;
+      opacity: 1;
+      background: var(--c);
+      z-index: 9;
+      box-shadow: 16px 0 0 rgba(255,255,255,.55);
+    }
+
+    .ticks i {
+      width: 9vmin;
+      height: 1px;
+      background: rgba(255,255,255, calc(.06 + var(--fade, .2) * .18));
+      transform: rotate(var(--a)) translateX(calc(var(--ring-outer) + 1.2vmin));
+    }
+
+    .threads { clip-path: circle(36% at 50% 50%); opacity: .58; }
+    .threads i {
+      width: var(--len);
+      height: 1px;
+      background: var(--c);
+      opacity: calc(.12 + var(--fade, .3) * .28);
+      transform: rotate(var(--a)) translateX(4vmin);
+      transform-origin: 0 50%;
+    }
+
+    .bands i {
+      width: var(--len);
+      height: 4px;
+      background: var(--c);
+      opacity: calc(.25 + var(--fade, .4) * .55);
+      transform: rotate(var(--a)) translateX(var(--bar-dock));
+    }
+
+    .dots button {
+      width: 21px;
+      height: 21px;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--paper);
+      color: #1d191a;
+      font-weight: 900;
+      font-size: 9px;
+      cursor: pointer;
+      transform: rotate(var(--a)) translateX(73.5vmin) rotate(calc(-1 * var(--a)));
+    }
+    .dots button.active, .dots button:hover { background: var(--c); }
+
+    /* Blauer Fokus-Strahl — scharf, kein Glow-Blur */
+    .focus-beam-wrap {
+      pointer-events: none;
+      z-index: 22;
+      transform: rotate(var(--focus-deg));
+    }
+    .focus-beam {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 46vmin;
+      height: 3px;
+      transform: translateX(var(--bar-dock)) translateY(-1px);
+      transform-origin: 0 0;
+      background: linear-gradient(90deg, rgba(65,220,225,.95) 0%, rgba(65,220,225,.55) 55%, rgba(65,220,225,.08) 100%);
+      opacity: var(--beam-opacity, .85);
+    }
+    .focus-beam::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      margin-top: -4px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    .inline-tree {
+      position: fixed;
+      right: 34px;
+      top: 112px;
+      width: min(460px, calc(100vw - 64px));
+      max-height: calc(100vh - 210px);
+      overflow: auto;
+      z-index: 45;
+      pointer-events: auto;
+    }
+    .inline-tree:empty { display: none; }
+    .inline-tree:not(:empty) {
+      padding: 18px;
+      background: rgba(18,16,17,.94);
+      border: 1px solid rgba(255,255,255,.25);
+      box-shadow: 0 28px 90px rgba(0,0,0,.82), 0 0 0 9999px rgba(0,0,0,.12);
+    }
+    .inline-tree:not(:empty)::before {
+      content: "KASKA · MEMORY-KASKADE";
+      display: block;
+      margin-bottom: 14px;
+      color: rgba(255,255,255,.72);
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .22em;
+    }
+    .index-dashboard {
+      position: fixed;
+      right: 34px;
+      top: 112px;
+      width: min(320px, calc(100vw - 520px));
+      z-index: 46;
+      pointer-events: auto;
+      padding: 14px 16px;
+      background: rgba(12,10,11,.96);
+      border: 1px solid rgba(239,89,122,.45);
+      box-shadow: 0 20px 60px rgba(0,0,0,.75), inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .index-dashboard[hidden] { display: none !important; }
+    .index-dashboard ~ .inline-tree:not(:empty) { top: 112px; right: 34px; width: min(420px, calc(100vw - 380px)); }
+    body.idx-dash-open .inline-tree:not(:empty) { top: calc(112px + 240px); max-height: calc(100vh - 380px); }
+    .idx-dash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .idx-dash-badge {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .2em;
+      color: #ef597a;
+      padding: 4px 8px;
+      border: 1px solid rgba(239,89,122,.4);
+      background: rgba(239,89,122,.08);
+    }
+    .idx-dash-close { border: 0; background: transparent; color: rgba(255,255,255,.6); font-size: 18px; cursor: pointer; }
+    .idx-dash-body { display: flex; flex-direction: column; gap: 8px; }
+    .idx-dash-row { display: grid; grid-template-columns: 52px 1fr; gap: 8px; align-items: baseline; font-family: "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
+    .idx-dash-row span { font-size: 8px; color: rgba(255,255,255,.42); letter-spacing: .12em; }
+    .idx-dash-row strong { font-size: 11px; color: #fff; font-weight: 600; }
+    .idx-dash-idx .idx-dash-value { font-size: 28px; letter-spacing: -.04em; color: var(--cyan); }
+    .idx-dash-coords strong { font-size: 9px; color: rgba(255,255,255,.65); }
+    .idx-dash-foot { margin-top: 14px; }
+    .idx-dash-detail {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid rgba(65,220,225,.45);
+      background: rgba(65,220,225,.1);
+      color: #fff;
+      font: 10px/1.2 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .idx-dash-detail:hover { background: rgba(65,220,225,.2); }
+
+    .inline-tree.index-open-pulse {
+      animation: tc-panel-pulse .45s ease;
+    }
+    @keyframes tc-panel-pulse {
+      0% { box-shadow: 0 28px 90px rgba(0,0,0,.82), 0 0 0 0 rgba(65,220,225,.55); }
+      45% { box-shadow: 0 28px 90px rgba(0,0,0,.82), 0 0 0 3px rgba(65,220,225,.45); }
+      100% { box-shadow: 0 28px 90px rgba(0,0,0,.82), 0 0 0 9999px rgba(0,0,0,.12); }
+    }
+    .tree-branch {
+      position: relative;
+      margin: 10px 0 0 calc(var(--depth, 0) * 18px);
+      padding: 10px 12px;
+      border-left: 3px solid var(--c);
+      color: #fff;
+      background: rgba(255,255,255,.065);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.28;
+      text-transform: uppercase;
+      animation: branchIn .22s ease both;
+      animation-delay: calc(var(--depth) * 65ms);
+    }
+    .tree-branch small { display: block; margin-top: 5px; color: rgba(255,255,255,.78); font-size: 10px; text-transform: none; }
+    .tree-branch-content { display: inline-block; vertical-align: top; max-width: calc(100% - 36px); }
+    .tree-level {
+      display: inline-block;
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--c);
+      color: #111;
+      text-align: center;
+      line-height: 20px;
+      font-weight: 900;
+    }
+    .tree-close {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      cursor: pointer;
+    }
+    .tree-path { display: flex; gap: 6px; margin: 0 34px 12px 0; flex-wrap: wrap; }
+    .tree-path span {
+      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.78);
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      text-transform: uppercase;
+    }
+    .tree-path b { color: var(--c); }
+    @keyframes branchIn {
+      from { opacity: 0; transform: translateX(14px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .inline-tree.graph-explorer-open::before {
+      content: "KASKA · GRAPH-NAVIGATION";
+    }
+    .graph-explorer { position: relative; }
+    .graph-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .graph-back {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .graph-back:disabled { opacity: .35; cursor: default; }
+    .graph-crumb {
+      flex: 1;
+      font: 10px/1.4 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.72);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .graph-body { display: flex; flex-direction: column; gap: 14px; }
+    .graph-center-card {
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.07);
+      border-radius: 2px;
+    }
+    .graph-center-card h3 {
+      margin: 0 0 8px;
+      font: 13px/1.3 "SFMono-Regular", Consolas, monospace;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .graph-center-card p {
+      margin: 0 0 8px;
+      font: 11px/1.45 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.88);
+      text-transform: none;
+    }
+    .graph-meta {
+      font: 10px/1.4 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.58);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .graph-mini-wrap { margin: 8px 0 0; }
+    .graph-mini { width: 100%; height: auto; display: block; min-height: 180px; }
+    .graph-mini-label {
+      font: 9px/1.2 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.5);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 4px;
+    }
+    .graph-mini-node { cursor: pointer; transition: opacity .15s; }
+    .graph-mini-node:hover { opacity: .88; }
+    .graph-mini-node:focus { outline: 1px solid rgba(65,220,225,.6); outline-offset: 2px; }
+    .graph-spiral-spine, .graph-spiral-guide { pointer-events: none; }
+    .graph-neighbors h4,
+    .graph-archivals h4 {
+      margin: 0 0 8px;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.65);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .graph-neighbor-list,
+    .graph-archival-list { display: flex; flex-direction: column; gap: 6px; }
+    .graph-neighbor,
+    .graph-archival-card {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      cursor: pointer;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      transition: background .15s, border-color .15s;
+    }
+    .graph-neighbor:hover,
+    .graph-archival-card:hover {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.32);
+    }
+    .graph-neighbor strong,
+    .graph-archival-card strong {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .graph-neighbor small,
+    .graph-archival-card small {
+      display: block;
+      font-size: 10px;
+      color: rgba(255,255,255,.72);
+      text-transform: none;
+      line-height: 1.35;
+    }
+    .graph-neighbor .rel-badge {
+      display: inline-block;
+      margin-right: 6px;
+      padding: 2px 5px;
+      background: rgba(255,255,255,.12);
+      font-size: 9px;
+      letter-spacing: .08em;
+    }
+    .graph-loading,
+    .graph-error {
+      font: 11px/1.4 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.75);
+    }
+    .graph-error { color: #ff8a8a; }
+    .graph-empty { font: 10px/1.4 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.45); }
+    .graph-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      padding-right: 36px;
+    }
+    .graph-breadcrumb .crumb {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.55);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .graph-breadcrumb .crumb.active { color: var(--c, #41dce1); }
+    .graph-breadcrumb .crumb-sep { color: rgba(255,255,255,.25); font-size: 10px; }
+    .graph-title {
+      margin-bottom: 12px;
+      font: 11px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.82);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .graph-section { margin-bottom: 14px; }
+    .graph-section-title {
+      margin-bottom: 8px;
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .graph-l1 {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-left: 3px solid var(--c, #41dce1);
+      background: rgba(255,255,255,.06);
+      font: 11px/1.45 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.92);
+    }
+    .graph-pre {
+      margin: 0;
+      max-height: 220px;
+      overflow: auto;
+      padding: 10px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.1);
+      font: 10px/1.45 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.78);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .graph-link-btn {
+      display: block;
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(65,220,225,.12);
+      color: #41dce1;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      text-align: left;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .graph-neighbor .edge-type,
+    .graph-neighbor .edge-label { display: inline; }
+    .graph-neighbor .edge-type {
+      margin-right: 8px;
+      padding: 2px 5px;
+      background: var(--edge-color, rgba(255,255,255,.15));
+      font-size: 9px;
+      letter-spacing: .06em;
+    }
+    .graph-neighbor .edge-label { font-size: 11px; }
+    .graph-neighbor .edge-count { margin-left: 6px; opacity: .65; font-size: 10px; }
+    .graph-neighbor-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .graph-neighbor-row .graph-neighbor { flex: 1; }
+    .graph-edge-group { margin-bottom: 10px; }
+    .graph-edge-group-title {
+      margin: 0 0 6px;
+      font: 9px/1.2 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .graph-neighbor-edit {
+      margin-left: 8px;
+      padding: 2px 5px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(0,0,0,.35);
+      color: #fbbf24;
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .graph-neighbor-edit:hover { border-color: #fbbf24; }
+    .graph-tag-list { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .graph-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border: 1px solid rgba(220,133,70,.45);
+      background: rgba(220,133,70,.12);
+      font-size: 10px;
+      color: #f5d0b5;
+    }
+    .graph-tag-chip button {
+      border: none;
+      background: none;
+      color: #fbbf24;
+      cursor: pointer;
+      font-size: 10px;
+      padding: 0;
+    }
+    .graph-tag-editor-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .graph-tag-input {
+      flex: 1;
+      min-width: 120px;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(0,0,0,.3);
+      color: #fff;
+      font: 11px/1.2 "SFMono-Regular", Consolas, monospace;
+    }
+    .graph-tag-add-btn {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(65,220,225,.12);
+      color: #41dce1;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .graph-reviewed-badge {
+      font-size: 10px;
+      color: #9dc76d;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .graph-person-list { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .graph-person-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border: 1px solid rgba(65,220,225,.45);
+      background: rgba(65,220,225,.12);
+      font-size: 10px;
+      color: #b8f0f2;
+    }
+    .graph-person-chip button {
+      border: none;
+      background: none;
+      color: #fbbf24;
+      cursor: pointer;
+      font-size: 10px;
+      padding: 0;
+    }
+    .graph-person-editor-row,
+    .graph-person-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .graph-person-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 120px;
+      font-size: 9px;
+      color: rgba(255,255,255,.55);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .graph-person-input {
+      flex: 1;
+      min-width: 120px;
+      padding: 6px 8px;
+      border: 1px solid rgba(65,220,225,.35);
+      background: rgba(0,0,0,.3);
+      color: #fff;
+      font: 11px/1.2 "SFMono-Regular", Consolas, monospace;
+    }
+    .graph-person-add-btn {
+      padding: 6px 10px;
+      border: 1px solid rgba(65,220,225,.45);
+      background: rgba(65,220,225,.15);
+      color: #41dce1;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .graph-save-toast {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 8px;
+      z-index: 12;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font: 11px/1.3 "SFMono-Regular", Consolas, monospace;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .graph-save-toast.visible { opacity: 1; transform: translateY(0); }
+    .graph-save-toast.ok {
+      border: 1px solid rgba(157,199,109,.55);
+      background: rgba(157,199,109,.18);
+      color: #d7f0b8;
+    }
+    .graph-save-toast.err {
+      border: 1px solid rgba(239,89,122,.55);
+      background: rgba(239,89,122,.18);
+      color: #ffc4d2;
+    }
+    .graph-archive-prose {
+      font-family: "Source Serif 4", "Georgia", serif;
+      font-size: 1.02rem;
+      line-height: 1.65;
+      color: #e8e8ec;
+      word-break: break-word;
+    }
+    .graph-archive-prose .archive-modal-agent {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: rgba(255,255,255,.55);
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 16px;
+    }
+    .graph-archive-prose .archive-modal-agent strong { color: #c4c4cc; font-weight: 600; }
+    .graph-archive-prose .archive-modal-note-card {
+      margin: 0 0 20px 0;
+      padding: 14px 16px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      background: linear-gradient(145deg, rgba(99, 102, 241, 0.14) 0%, rgba(24, 24, 30, 0.9) 100%);
+    }
+    .graph-archive-prose .archive-modal-note-kicker {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+    }
+    .graph-archive-prose .archive-modal-note-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #f4f4f8;
+    }
+    .graph-archive-prose .archive-modal-note-text .amd-p { margin: 0 0 0.65em; }
+    .graph-archive-prose .archive-modal-memory-id {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,.55);
+      word-break: break-all;
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px dashed rgba(255,255,255,.15);
+    }
+    .graph-archive-prose .archive-modal-memory-id strong { color: #6a8fd8; font-weight: 600; }
+    .graph-archive-prose .archive-modal-media { margin-bottom: 16px; }
+    .graph-archive-prose .archive-modal-media-kicker {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #9dc76d;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .graph-archive-prose .archive-modal-media-img {
+      display: block;
+      max-width: 100%;
+      max-height: min(52vh, 520px);
+      min-height: 80px;
+      width: auto;
+      height: auto;
+      margin: 0 auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      object-fit: contain;
+      background: #1a1a22;
+    }
+    .graph-archive-prose .archive-modal-media-meta {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,.55);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .graph-archive-prose .archive-modal-media-meta a { color: #6a8fd8; }
+    .graph-archive-prose .archive-modal-prose {
+      font-size: 1.02rem;
+      line-height: 1.68;
+    }
+    .graph-archive-prose .archive-modal-prose .amd-p {
+      margin: 0 0 1em;
+      color: #dcdce3;
+    }
+    .graph-archive-prose .archive-modal-prose .amd-p:last-child { margin-bottom: 0; }
+    .graph-archive-prose .archive-modal-prose .amd-h {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.82em;
+      font-weight: 700;
+      color: #f4f4f8;
+      margin: 1.35em 0 0.55em;
+      line-height: 1.3;
+    }
+    .graph-archive-prose .archive-modal-prose .amd-h:first-child { margin-top: 0; }
+    .graph-archive-prose .archive-modal-prose h2.amd-h { font-size: 0.95em; color: #e0e7ff; }
+    .graph-archive-prose .archive-modal-prose .amd-strong { color: #f0f0f5; font-weight: 600; }
+    .graph-archive-prose .archive-modal-prose .amd-empty { color: rgba(255,255,255,.45); font-style: italic; }
+    .graph-pre-fallback { margin: 0; }
+    .graph-media-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(220,133,70,.45);
+      background: rgba(220,133,70,.15);
+      color: #f5d0b5;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      vertical-align: middle;
+    }
+    .graph-media-badge.compact { margin-left: 4px; padding: 0 5px; }
+    .graph-media-icon { font-size: 11px; line-height: 1; }
+    .graph-media-count { font-weight: 700; }
+    .graph-archival-card {
+      position: relative;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+    .graph-archival-card .arch-preview { display: block; margin-top: 4px; }
+    .graph-media-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .graph-media-thumb {
+      display: block;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(0,0,0,.35);
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+    .graph-media-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .tree-media-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 6px;
+      padding: 0 5px;
+      border-radius: 999px;
+      border: 1px solid rgba(220,133,70,.4);
+      background: rgba(220,133,70,.12);
+      color: #f5d0b5;
+      font-size: 9px;
+      vertical-align: middle;
+    }
+    .graph-archival-card .arch-id {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 9px;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .08em;
+    }
+    .graph-archival-card.nested { margin-left: 14px; margin-top: 4px; }
+    #graphMini {
+      margin-top: 4px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.32);
+      border-radius: 4px;
+    }
+    .tree-branch-clickable {
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .tree-branch-clickable:hover { background: rgba(255,255,255,.14); }
+    .tree-branch-clickable::after {
+      content: "↳ graph öffnen";
+      display: block;
+      margin-top: 6px;
+      font-size: 9px;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .12em;
+    }
+    .tree-branch-zoom-day::after {
+      content: "↳ tag zoom";
+    }
+
+    .inline-tree.hour-panel-open::before {
+      content: "KASKA · MMA STUNDE";
+    }
+    .hour-person-filters {
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .hour-person-filters .hour-sender-chip {
+      opacity: .85;
+      font-size: 8px;
+    }
+    .hour-room-block {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+    .hour-room-head {
+      margin-bottom: 8px;
+      font: 10px/1.2 "SFMono-Regular", Consolas, monospace;
+      color: var(--c, #41dce1);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .hour-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin: 0 0 10px;
+      flex-wrap: wrap;
+    }
+    .hour-panel-title {
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.65);
+    }
+    .hour-panel-stats {
+      font: 9px/1.3 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.45);
+      text-align: right;
+    }
+    .hour-sender-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .hour-filter-label {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .hour-sender-chip {
+      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.78);
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      transition: background .15s, border-color .15s;
+    }
+    .hour-sender-chip:hover { background: rgba(255,255,255,.1); }
+    .hour-sender-chip.active {
+      border-color: var(--c, #41dce1);
+      background: rgba(65,220,225,.14);
+      color: #fff;
+    }
+    .hour-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 320px);
+      overflow: auto;
+    }
+    .hour-loading, .hour-empty {
+      font: 11px/1.4 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.55);
+    }
+    .hour-conversation {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.2);
+      padding: 8px;
+    }
+    .hour-conversation.is-thread {
+      border-left: 3px solid var(--c, #41dce1);
+    }
+    .hour-conv-head {
+      margin-bottom: 8px;
+      font: 9px/1.2 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.55);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .hour-msg {
+      margin: 6px 0 0;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .hour-msg.role-user { border-left: 2px solid #ef597a; }
+    .hour-msg.role-assistant { border-left: 2px solid #41dce1; }
+    .hour-msg.role-other { border-left: 2px solid #9dc76d; }
+    .hour-msg-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .hour-msg-time {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.45);
+    }
+    .hour-msg-sender {
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .hour-msg-role {
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.4);
+      text-transform: uppercase;
+    }
+    .hour-state {
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      padding: 2px 4px;
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.5);
+      text-transform: uppercase;
+    }
+    .hour-msg-text {
+      margin: 0 0 6px;
+      font: 11px/1.45 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.88);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .hour-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .hour-topic {
+      padding: 2px 6px;
+      background: rgba(168,85,247,.18);
+      border: 1px solid rgba(168,85,247,.35);
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      color: #d8b4fe;
+      text-transform: uppercase;
+    }
+    .hour-insights {
+      margin: 4px 0 0;
+      padding-left: 16px;
+      font: 10px/1.35 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.62);
+    }
+    .hour-msg-meta { margin-top: 4px; }
+    .hour-erip {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .08em;
+    }
+
+    .index-overlay, .index-perimeter-hit-layer {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 24;
+    }
+    .index-perimeter-hit-layer { pointer-events: all; z-index: 25; }
+    .index-overlay .index-value-text {
+      fill: rgba(255,255,255,.78);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 8px;
+      letter-spacing: .04em;
+      paint-order: stroke fill;
+      stroke: rgba(29,25,26,.85);
+      stroke-width: 2.5px;
+    }
+    .index-overlay .index-value-text.active {
+      fill: #fff;
+      font-size: 9.5px;
+      font-weight: 700;
+    }
+    .index-overlay .index-value-text.has-meta { font-size: 7px; }
+    .index-overlay .index-time-sub {
+      fill: rgba(65,220,225,.75);
+      font-size: 6.5px;
+      letter-spacing: .06em;
+    }
+    .index-overlay { pointer-events: none; }
+    .index-overlay .index-bar-label { pointer-events: all; }
+    .index-overlay .index-bar-label {
+      pointer-events: all;
+      cursor: pointer;
+    }
+    .index-overlay .index-bar-hit {
+      pointer-events: all;
+      cursor: pointer;
+    }
+    .tc-crosshair-readout {
+      position: fixed;
+      z-index: 48;
+      left: 0;
+      top: 0;
+      min-width: 168px;
+      max-width: min(240px, calc(100vw - 24px));
+      padding: 8px 10px;
+      border: 1px solid rgba(65,220,225,.45);
+      background: rgba(12,10,11,.94);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      text-transform: uppercase;
+      pointer-events: none;
+      box-shadow: 0 8px 28px rgba(0,0,0,.55);
+    }
+    .tc-crosshair-readout[hidden] { display: none !important; }
+    .tc-crosshair-readout .tc-2d-axis { display: block; font-size: 10px; letter-spacing: .12em; }
+    .tc-crosshair-readout .tc-2d-time { color: var(--cyan); margin-bottom: 4px; }
+    .tc-crosshair-readout .tc-2d-index { color: #fff; font-size: 18px; letter-spacing: -.04em; margin-bottom: 4px; }
+    .tc-crosshair-readout .tc-2d-meta { display: block; color: rgba(255,255,255,.45); font-size: 8px; text-transform: none; line-height: 1.35; }
+    .tc-crosshair-mark {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border: 1px solid rgba(65,220,225,.9);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 26;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.5), 0 0 12px rgba(65,220,225,.35);
+    }
+    .tc-crosshair-mark::before, .tc-crosshair-mark::after {
+      content: "";
+      position: absolute;
+      background: rgba(65,220,225,.55);
+    }
+    .tc-crosshair-mark::before { left: 50%; top: -18px; width: 1px; height: 46px; transform: translateX(-50%); }
+    .tc-crosshair-mark::after { top: 50%; left: -18px; height: 1px; width: 46px; transform: translateY(-50%); }
+    .tc-crosshair-mark[hidden] { display: none !important; }
+
+    .bloomberg-bar {
+      position: fixed;
+      z-index: 55;
+      top: 18px;
+      right: 28px;
+      width: auto;
+      pointer-events: auto;
+    }
+    .bb-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid rgba(168,85,247,.45);
+      background: rgba(18,16,17,.94);
+      color: rgba(255,255,255,.88);
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    .bb-trigger:hover,
+    .bb-trigger[aria-expanded="true"] {
+      border-color: rgba(65,220,225,.65);
+      background: rgba(65,220,225,.1);
+      box-shadow: 0 0 0 1px rgba(65,220,225,.2);
+    }
+    .bb-trigger-icon {
+      font-size: 13px;
+      line-height: 1;
+      color: var(--cyan);
+    }
+    .bb-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,.58);
+      backdrop-filter: blur(3px);
+    }
+    .bb-modal-backdrop[hidden] { display: none !important; }
+    .bb-modal {
+      position: fixed;
+      z-index: 210;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(920px, calc(100vw - 40px));
+      max-height: min(88vh, 820px);
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(12,10,11,.97);
+      box-shadow: 0 32px 100px rgba(0,0,0,.88), inset 0 0 0 1px rgba(255,255,255,.05);
+      padding: 16px 16px 18px;
+    }
+    .bb-modal[hidden] { display: none !important; }
+    body.bb-modal-open { overflow: hidden; }
+    .bb-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .bb-modal-title {
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .22em;
+      color: rgba(255,255,255,.72);
+      text-transform: uppercase;
+    }
+    .bb-modal-close {
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.55);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+    .bb-modal-close:hover { color: #fff; }
+    .bb-modal-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .bb-tab {
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.55);
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .bb-tab:hover { border-color: rgba(65,220,225,.4); color: rgba(255,255,255,.8); }
+    .bb-tab.active {
+      border-color: rgba(65,220,225,.65);
+      background: rgba(65,220,225,.12);
+      color: #fff;
+    }
+    .bb-tab-panel[hidden] { display: none !important; }
+    .bb-charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .bb-chart-panel {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(8,7,8,.92);
+      padding: 8px 10px 10px;
+      min-height: 156px;
+    }
+    .bb-chart-panel.bb-chart-wide {
+      grid-column: 1 / -1;
+      min-height: 120px;
+    }
+    .bb-chart-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .bb-chart-title {
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .16em;
+      color: rgba(255,255,255,.72);
+    }
+    .bb-chart-axes {
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .1em;
+      color: rgba(65,220,225,.55);
+      text-transform: uppercase;
+    }
+    .bb-chart-body { min-height: 128px; }
+    .bb-chart-svg, .bb-ring-svg { display: block; width: 100%; }
+    .bb-chart-axis {
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      fill: rgba(255,255,255,.38);
+    }
+    .bb-chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .bb-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font: 8px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .08em;
+    }
+    .bb-legend-item i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 1px;
+    }
+    .bb-ring-body { display: flex; justify-content: center; align-items: center; min-height: 100px; }
+    .bb-ring-center {
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      fill: rgba(255,255,255,.45);
+      letter-spacing: .2em;
+    }
+    .bb-modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .bb-widget {
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(18,16,17,.92);
+      padding: 8px 10px;
+      min-height: 72px;
+    }
+    .bb-widget-head {
+      margin-bottom: 6px;
+      font: 9px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .18em;
+    }
+    .bb-search-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid rgba(168,85,247,.35);
+      background: rgba(0,0,0,.35);
+      color: #fff;
+      font: 10px/1.3 "SFMono-Regular", Consolas, monospace;
+    }
+    .bb-search-drop {
+      margin-top: 4px;
+      max-height: 140px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,8,9,.96);
+    }
+    .bb-search-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 6px 8px;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: transparent;
+      color: rgba(255,255,255,.85);
+      font: 10px/1.3 "SFMono-Regular", Consolas, monospace;
+      cursor: pointer;
+    }
+    .bb-search-item small { display: block; color: rgba(255,255,255,.4); margin-top: 2px; }
+    .bb-search-item:hover { background: rgba(65,220,225,.12); }
+    .bb-pulse-body, .bb-weather-body { display: flex; flex-direction: column; gap: 4px; }
+    .bb-pulse-row { display: grid; grid-template-columns: 38px 1fr; gap: 6px; font: 9px/1.35 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.78); }
+    .bb-pulse-row time { color: rgba(255,255,255,.42); }
+    .bb-weather-between { font: 10px/1.2 "SFMono-Regular", Consolas, monospace; color: var(--cyan); margin-bottom: 6px; letter-spacing: .08em; }
+    .bb-erip-row { display: grid; grid-template-columns: 14px 1fr 28px; gap: 6px; align-items: center; margin-bottom: 3px; }
+    .bb-erip-axis { font: 9px/1 "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+    .bb-erip-bar { height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
+    .bb-erip-bar i { display: block; height: 100%; border-radius: 2px; }
+    .bb-erip-val { font: 9px/1 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.55); text-align: right; }
+    .bb-empty { font: 9px/1.3 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.38); }
+    .bb-widget-news { max-height: 280px; overflow: hidden; display: flex; flex-direction: column; }
+    .bb-widget-news .nb-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .bb-widget-news .nb-title { font: 9px/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .16em; color: rgba(255,255,255,.55); flex: 1; }
+    .bb-widget-news .nb-count { font: 9px/1 "SFMono-Regular", Consolas, monospace; color: var(--cyan); }
+    .bb-widget-news .nb-refresh { border: 0; background: transparent; color: rgba(255,255,255,.5); cursor: pointer; font-size: 12px; }
+    .bb-widget-news .nb-list { flex: 1; overflow: auto; max-height: 220px; display: flex; flex-direction: column; gap: 4px; }
+    .bb-widget-news .nb-item { padding: 5px 6px; border-left: 2px solid rgba(255,255,255,.2); background: rgba(255,255,255,.04); cursor: pointer; }
+    .bb-widget-news .nb-item:hover, .bb-widget-news .nb-item.nb-item-hot { border-left-color: #ef597a; background: rgba(239,89,122,.08); }
+    .bb-widget-news .nb-item-meta { display: flex; gap: 6px; font: 8px/1.2 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.45); margin-bottom: 2px; }
+    .bb-widget-news .nb-headline { margin: 0; font: 9px/1.25 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.88); font-weight: 600; }
+    .bb-widget-news .nb-summary { margin: 2px 0 0; font: 8px/1.3 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.45); }
+    .bb-widget-news .nb-actions { display: none; }
+    .bb-widget-news .nb-empty { font: 8px/1.3 "SFMono-Regular", Consolas, monospace; color: rgba(255,255,255,.35); padding: 4px 0; }
+
+
+    .source-nav {
+      position: fixed;
+      z-index: 120;
+      top: 56px;
+      right: 28px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      pointer-events: auto;
+    }
+    .source-nav a {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(29,25,26,.88);
+      color: rgba(255,255,255,.72);
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .source-nav a.active, .source-nav a:hover {
+      color: #fff;
+      border-color: rgba(65,220,225,.55);
+      background: rgba(65,220,225,.12);
+    }
+    .source-nav button.source-sound-btn {
+      border: 1px solid rgba(255,255,255,.18);
+      background: transparent;
+      color: rgba(255,255,255,.72);
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .source-nav button.source-sound-btn:hover {
+      border-color: rgba(65,220,225,.55);
+      color: #fff;
+      background: rgba(65,220,225,.12);
+    }
+    .tc-sound-fab {
+      position: fixed;
+      z-index: 200;
+      right: 22px;
+      bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 2px solid rgba(65, 220, 225, 0.55);
+      background: rgba(18, 16, 17, 0.96);
+      color: #fff;
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+    .tc-sound-fab:hover, .tc-sound-fab:focus-visible {
+      border-color: #41dce1;
+      outline: none;
+      transform: scale(1.04);
+    }
+    .zoom-bar .tc-sound-toggle {
+      min-height: 40px;
+      min-width: 44px;
+      font-size: 11px;
+    }
+    .boot-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      background: rgba(29,25,26,.94);
+      color: var(--ink);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .boot-overlay.hidden { display: none; }
+    .boot-overlay .err { color: var(--pink); max-width: 420px; text-align: center; line-height: 1.5; }
+    .zoom-bar {
+      position: fixed;
+      z-index: 35;
+      left: 28px;
+      bottom: 52px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .zoom-bar button, .zoom-crumb {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(29,25,26,.92);
+      color: rgba(255,255,255,.82);
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .zoom-bar button:hover { border-color: var(--cyan); color: #fff; background: rgba(65,220,225,.1); }
+    .zoom-bar button:disabled { opacity: .35; cursor: default; }
+    .zoom-crumb { cursor: default; color: var(--cyan); }
+    .wheel.zoom-anim {
+      transition: transform 280ms cubic-bezier(.22,1,.36,1), opacity 220ms ease;
+    }
+    .wheel.zoom-out-step { opacity: 0.35; transform: translateY(-50%) rotate(var(--rotation)) scale(0.92); }
+    .wheel.zoom-in-step { opacity: 0.35; transform: translateY(-50%) rotate(var(--rotation)) scale(1.06); }
+    .scroll-snap-track {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .scroll-snap-step {
+      height: 0;
+      visibility: hidden;
+    }
+    .mobile-scroll-scrub {
+      display: none;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: max(10px, env(safe-area-inset-bottom, 0px));
+      z-index: 55;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(18,16,17,.94);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.55);
+      touch-action: manipulation;
+    }
+    .mobile-scroll-scrub button {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .mobile-scroll-scrub button:disabled { opacity: .35; }
+    .mobile-scroll-scrub input[type="range"] {
+      flex: 1;
+      min-width: 0;
+      height: 28px;
+      accent-color: var(--cyan);
+      touch-action: pan-x;
+    }
+    .mobile-scroll-scrub-label {
+      flex: 0 0 auto;
+      min-width: 3.2rem;
+      font: 10px/1 "SFMono-Regular", Consolas, monospace;
+      color: rgba(255,255,255,.72);
+      text-align: right;
+      letter-spacing: .06em;
+    }
+    @media (max-width: 760px) {
+      html {
+        scroll-snap-type: y proximity;
+        scroll-padding-bottom: 88px;
+      }
+      body { touch-action: pan-y; }
+      .wheel { left: -74vmin; width: 180vmin; }
+      .title { left: 18px; top: 18px; max-width: calc(100vw - 36px); }
+      .title h1 { font-size: clamp(28px, 9vw, 48px); }
+      .title small { max-width: 100%; font-size: 9px; }
+      .readout {
+        right: 18px;
+        left: 18px;
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+        max-width: none;
+      }
+      .tc-sound-fab {
+        bottom: calc(248px + env(safe-area-inset-bottom, 0px));
+        right: 18px;
+        width: 56px;
+        height: 56px;
+      }
+      .source-nav { top: auto; bottom: calc(138px + env(safe-area-inset-bottom, 0px)); right: 18px; left: auto; z-index: 120; }
+      .bloomberg-bar { top: 18px; right: 18px; left: auto; bottom: auto; width: auto; }
+      .bb-modal { width: calc(100vw - 20px); max-height: calc(100dvh - 32px); padding: 12px; }
+      .bb-modal-grid { grid-template-columns: 1fr; }
+      .bb-charts-grid { grid-template-columns: 1fr; }
+      .bb-chart-panel.bb-chart-wide { grid-column: auto; }
+      .tc-crosshair-readout { max-width: calc(100vw - 36px); }
+      .zoom-bar {
+        left: 18px;
+        bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+        max-width: calc(100vw - 36px);
+      }
+      .scroll-snap-step {
+        height: 68vh;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+      }
+      .mobile-scroll-scrub { display: flex; }
+      .inline-tree:not(:empty) {
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        width: 100%;
+        max-height: min(58vh, calc(100dvh - 120px));
+        padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+        border-radius: 16px 16px 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        box-shadow: 0 -18px 60px rgba(0,0,0,.75);
+      }
+      .inline-tree:not(:empty)::before { margin-bottom: 10px; }
+      .inline-tree.graph-explorer-open { max-height: min(72vh, calc(100dvh - 80px)); }
+      .inline-tree:not(:empty) ~ .mobile-scroll-scrub { display: none !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="/stream/css/clicky_ui.css">
+  <script src="/stream/js/clicky_ui.js?v=20260630b"></script>
+</head>
+<body>
+  <div class="bloomberg-bar" id="bloombergBar" aria-label="Bloomberg-Terminal Trigger"></div>
+  <nav class="source-nav" aria-label="Datenquelle">
+    <a href="?source=cascade" id="navCascade">Kaskade</a>
+    <a href="?source=mma&window=last_30d" id="navMma">MMA</a>
+    <a href="/stream/cascade/spiral" target="_blank" rel="noopener">3D Spirale</a>
+    <button type="button" class="source-sound-btn tc-sound-toggle" id="tcSoundToggle" title="UI-Sounds — Klick = Test, Rechtsklick = stumm">🔊</button>
+  </nav>
+  <button type="button" class="tc-sound-fab tc-sound-toggle" id="tcSoundFab" title="Sounds an — tippen" aria-label="UI-Sounds">🔊</button>
+  <div class="boot-overlay" id="bootOverlay">
+    <div id="bootText">Kaskade wird geladen…</div>
+  </div>
+  <header class="title">
+    <p>Time Circle</p>
+    <h1>Kaska<br>Memory</h1>
+    <small id="titleHint">Daten sitzen im dunklen Reifen — Schrift im Segment, Balken außen. Innenring: Phasen von–bis (Monat/Woche), im Fokus wie Herzschlag größer.</small>
+  </header>
+  <div class="readout" aria-live="polite">
+    <strong id="year">2019</strong>
+    <span id="phase" class="phase-readout">JAN · KW 01 — phasenring innen</span>
+    <span id="copy">linie 01 / anker / erinnerungs spur — scroll-fokus hält den reifen still.</span>
+    <div class="cascade-filter-bar" id="cascadeFilterBar" hidden>
+      <input type="search" id="tcThemeInput" data-filter="theme" placeholder="Theme filtern…" autocomplete="off" />
+      <input type="search" id="tcPersonInput" data-filter="person" placeholder="Person filtern…" autocomplete="off" />
+      <div class="filter-drop" id="tcFilterDrop" hidden></div>
+      <span class="filter-active" id="tcFilterActive" hidden></span>
+    </div>
+  </div>
+  <div class="progress"></div>
+  <div class="zoom-bar" aria-label="Zoom-Ebenen">
+    <span class="zoom-crumb" id="zoomCrumb">monate</span>
+    <button type="button" class="tc-sound-toggle" id="tcSoundZoom" title="Sounds">🔊</button>
+    <button type="button" id="btnZoomOut" disabled title="Eine Ebene zurück">← zurück</button>
+    <button type="button" id="btnZoomIn" title="In fokussiertes Segment zoomen">↳ reinzoomen</button>
+  </div>
+  <div class="focus-vignette" aria-hidden="true"></div>
+
+  <main class="stage">
+    <div class="tc-crosshair-mark" id="tcCrosshairMark" hidden aria-hidden="true"></div>
+    <section class="wheel zoom-anim" aria-label="Kaskade Memory Time Circle">
+      <svg class="network" id="network" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
+      <div class="threads" id="threads"></div>
+      <svg class="phase-ring" id="phaseRing" viewBox="0 0 1000 1000" aria-hidden="true">
+        <defs id="phasePaths"></defs>
+        <g id="phaseArcs"></g>
+        <g id="phaseLabels"></g>
+      </svg>
+      <div class="circle"></div>
+      <svg class="ring-segments" id="ringSegments" viewBox="0 0 1000 1000">
+        <defs id="segPaths"></defs>
+        <g id="segAreas"></g>
+      </svg>
+      <div class="data" id="data"></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="anchors" id="anchors"></div>
+      <div class="bands" id="bands"></div>
+      <div class="bars" id="bars"></div>
+      <svg class="index-overlay" id="indexOverlay" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
+      <svg class="index-perimeter-hit-layer" id="indexPerimeterHit" viewBox="0 0 1000 1000" aria-label="Index-Perimeter — Klick für 2D-Koordinaten"></svg>
+      <div class="dots" id="dots"></div>
+      <div class="focus-beam-wrap" aria-hidden="true"><div class="focus-beam"></div></div>
+    </section>
+  </main>
+  <div class="tc-crosshair-readout" id="tcCrosshairReadout" hidden aria-live="polite"></div>
+  <aside class="index-dashboard" id="indexDashboard" hidden aria-label="Index Dashboard"></aside>
+  <div class="inline-tree" id="inlineTree" aria-hidden="true"></div>
+  <div id="scrollSnapTrack" class="scroll-snap-track" aria-hidden="true"></div>
+  <nav class="mobile-scroll-scrub" id="mobileScrollScrub" aria-label="Zeitnavigation">
+    <button type="button" id="scrubPrev" title="Vorheriges Segment">‹</button>
+    <input type="range" id="scrubRange" min="0" max="0" value="0" aria-label="Segment wählen" />
+    <button type="button" id="scrubNext" title="Nächstes Segment">›</button>
+    <span class="mobile-scroll-scrub-label" id="scrubLabel">—</span>
+  </nav>
+
+  <script>
+  (function loadAndRun() {
+    var isLocal = location.port === '8777' || location.pathname.indexOf('zeitspirale-scroll') >= 0;
+    var dataSrc = isLocal ? 'time_circle_data.js' : '/stream/js/time_circle_data.js?v=20260630h';
+    var proseSrc = isLocal ? 'archive_prose_render.js' : '/stream/js/archive_prose_render.js';
+    var graphSrc = isLocal ? 'time_circle_graph_nav.js' : '/stream/js/time_circle_graph_nav.js?v=20260630h';
+    var hourSrc = isLocal ? 'time_circle_hour_panel.js' : '/stream/js/time_circle_hour_panel.js';
+    var indexSrc = isLocal ? 'time_circle_index.js' : '/stream/js/time_circle_index.js?v=20260630d';
+    var newsBoardSrc = isLocal ? 'time_circle_news_board.js' : '/stream/js/time_circle_news_board.js?v=20260630d';
+    var chartsSrc = isLocal ? 'time_circle_bloomberg_charts.js' : '/stream/js/time_circle_bloomberg_charts.js?v=20260630f';
+    var bloombergSrc = isLocal ? 'time_circle_bloomberg.js' : '/stream/js/time_circle_bloomberg.js?v=20260630f';
+
+    function loadScript(src, onOk, onErr) {
+      var el = document.createElement('script');
+      el.src = src;
+      el.onload = onOk;
+      el.onerror = onErr;
+      document.head.appendChild(el);
+    }
+
+    loadScript(dataSrc, function () {
+      loadScript(proseSrc, function () {
+        loadScript(graphSrc, function () {
+          loadScript(hourSrc, function () {
+            loadScript(indexSrc, function () {
+              loadScript(newsBoardSrc, function () {
+                loadScript(chartsSrc, function () {
+                  loadScript(bloombergSrc, runApp, function () {
+                    document.getElementById('bootText').innerHTML =
+                      '<div class="err">Script samht geladen: ' + bloombergSrc + '</div>';
+                  });
+                }, function () {
+                  document.getElementById('bootText').innerHTML =
+                    '<div class="err">Script samht geladen: ' + chartsSrc + '</div>';
+                });
+              }, function () {
+                document.getElementById('bootText').innerHTML =
+                  '<div class="err">Script samht geladen: ' + newsBoardSrc + '</div>';
+              });
+            }, function () {
+              document.getElementById('bootText').innerHTML =
+                '<div class="err">Script samht geladen: ' + indexSrc + '</div>';
+            });
+          }, function () {
+            document.getElementById('bootText').innerHTML =
+              '<div class="err">Script samht geladen: ' + hourSrc + '</div>';
+          });
+        }, function () {
+          document.getElementById('bootText').innerHTML =
+            '<div class="err">Script samht geladen: ' + graphSrc + '</div>';
+        });
+      }, function () {
+        document.getElementById('bootText').innerHTML =
+          '<div class="err">Script samht geladen: ' + proseSrc + '</div>';
+      });
+    }, function () {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">Script samht geladen: ' + dataSrc + '</div>';
+    });
+
+    function runApp() {
+    if (!window.TimeCircleData) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleData fehlt nach ' + dataSrc + '</div>';
+      return;
+    }
+    if (!window.TimeCircleGraphNav) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleGraphNav fehlt nach ' + graphSrc + '</div>';
+      return;
+    }
+    if (!window.TimeCircleHourPanel) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleHourPanel fehlt nach ' + hourSrc + '</div>';
+      return;
+    }
+    if (!window.TimeCircleIndex) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleIndex fehlt nach ' + indexSrc + '</div>';
+      return;
+    }
+    if (!window.TimeCircleNewsBoard) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleNewsBoard fehlt nach ' + newsBoardSrc + '</div>';
+      return;
+    }
+    if (!window.TimeCircleBloomberg) {
+      document.getElementById('bootText').innerHTML =
+        '<div class="err">TimeCircleBloomberg fehlt nach ' + bloombergSrc + '</div>';
+      return;
+    }
+    const root = document.documentElement;
+    const palette = ['#41dce1','#ef597a','#dc8546','#9dc76d','#6a8fd8','#d9c85d'];
+    const STEP = 3.58;
+    const FOCUS_DEG = -18;
+    const CX = 500, CY = 500;
+    const R_IN = 233, R_OUT = 294, R_SPUR = 233;
+    const R_PHASE_IN = 148, R_PHASE_OUT = 188, R_PHASE_PULSE = 214;
+    const R_WEEK_IN = 132, R_WEEK_OUT = 144;
+
+    const bootOverlay = document.querySelector('#bootOverlay');
+    const bootText = document.querySelector('#bootText');
+    const titleHint = document.querySelector('#titleHint');
+    const phasePaths = document.querySelector('#phasePaths');
+    const phaseArcs = document.querySelector('#phaseArcs');
+    const phaseLabels = document.querySelector('#phaseLabels');
+    const bars = document.querySelector('#bars');
+    const segAreas = document.querySelector('#segAreas');
+    const data = document.querySelector('#data');
+    const dots = document.querySelector('#dots');
+    const ticks = document.querySelector('#ticks');
+    const anchors = document.querySelector('#anchors');
+    const network = document.querySelector('#network');
+    const inlineTree = document.querySelector('#inlineTree');
+    const graphNav = TimeCircleGraphNav.create(inlineTree);
+    const threads = document.querySelector('#threads');
+    const bands = document.querySelector('#bands');
+    const year = document.querySelector('#year');
+    const phase = document.querySelector('#phase');
+    const copy = document.querySelector('#copy');
+    const zoomCrumb = document.querySelector('#zoomCrumb');
+    const btnZoomIn = document.querySelector('#btnZoomIn');
+    const btnZoomOut = document.querySelector('#btnZoomOut');
+    const wheelEl = document.querySelector('.wheel');
+    const TC_SOUND_BASE = '/stream/sounds/ui/';
+    const TC_SOUND_FILES = {
+      tick: 'navigation.mp3',
+      send: 'navigation_enter.mp3',
+      back: 'navigation_back.mp3',
+      receive: 'prompt.mp3',
+      done: 'prompt_enter.mp3',
+      error: 'prompt_back.mp3',
+    };
+    let tcAudioCtx = null;
+    let tcBuffers = {};
+    let tcSoundsReady = false;
+    let tcSoundsMuted = false;
+    let lastTcTickAt = 0;
+
+    function tcSetSoundStatus(msg) {
+      if (copy) copy.textContent = msg;
+    }
+
+    async function tcUnlockSounds() {
+      tcAudioCtx = tcAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (tcAudioCtx.state === 'suspended') await tcAudioCtx.resume();
+      const keys = Object.keys(TC_SOUND_FILES);
+      for (let ki = 0; ki < keys.length; ki++) {
+        const key = keys[ki];
+        const file = TC_SOUND_FILES[key];
+        if (tcBuffers[key]) continue;
+        const res = await fetch(TC_SOUND_BASE + file);
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + file);
+        tcBuffers[key] = await tcAudioCtx.decodeAudioData(await res.arrayBuffer());
+      }
+      tcSoundsReady = true;
+      return true;
+    }
+
+    function tcPlayBuffer(key) {
+      if (tcSoundsMuted || !tcSoundsReady || !tcBuffers[key] || !tcAudioCtx) return false;
+      try {
+        const src = tcAudioCtx.createBufferSource();
+        const g = tcAudioCtx.createGain();
+        g.gain.value = 0.8;
+        src.buffer = tcBuffers[key];
+        src.connect(g);
+        g.connect(tcAudioCtx.destination);
+        src.start(0);
+        return true;
+      } catch (err) {
+        TimeCircleData.log('WARN', 'tc_play_buffer_failed', { key: key, error: String(err) });
+        return false;
+      }
+    }
+
+    function tcPlayHtml(key) {
+      const file = TC_SOUND_FILES[key];
+      if (!file || tcSoundsMuted) return;
+      const a = new Audio(TC_SOUND_BASE + file);
+      a.volume = 0.8;
+      a.play().catch((err) => {
+        TimeCircleData.log('WARN', 'tc_play_html_failed', { key: key, error: String(err) });
+      });
+    }
+
+    function uiSound(key) {
+      if (tcSoundsMuted) return;
+      if (!tcPlayBuffer(key)) tcPlayHtml(key);
+    }
+
+    function maybeScrollSnapSound() {
+      if (tcSoundsMuted || !tcSoundsReady) return;
+      const now = Date.now();
+      if (now - lastTcTickAt < 90) return;
+      lastTcTickAt = now;
+      tcPlayBuffer('tick');
+    }
+
+    function tcSyncSoundButtons() {
+      const label = tcSoundsMuted ? '🔇' : '🔊';
+      document.querySelectorAll('.tc-sound-toggle').forEach((btn) => {
+        btn.textContent = label;
+      });
+    }
+
+    if (document.querySelectorAll('.tc-sound-toggle').length) {
+      try {
+        if (localStorage.getItem('tc_sounds_muted') === '1') {
+          tcSoundsMuted = true;
+          tcSyncSoundButtons();
+        }
+      } catch (e) { /* ignore */ }
+      document.querySelectorAll('.tc-sound-toggle').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          tcSoundsMuted = false;
+          tcSyncSoundButtons();
+          try { localStorage.removeItem('tc_sounds_muted'); } catch (err) { /* ignore */ }
+          try {
+            await tcUnlockSounds();
+            tcPlayBuffer('send');
+            tcSetSoundStatus('🔊 Sounds aktiv — scroll oder ↳ reinzoomen');
+          } catch (err) {
+            tcPlayHtml('send');
+            tcSetSoundStatus('Sound HTML-Fallback: ' + err.message);
+          }
+        });
+        btn.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          tcSoundsMuted = true;
+          tcSoundsReady = false;
+          tcSyncSoundButtons();
+          try { localStorage.setItem('tc_sounds_muted', '1'); } catch (err) { /* ignore */ }
+          tcSetSoundStatus('Sounds aus — 🔊 klicken zum An');
+        });
+      });
+    }
+
+    const cascadeFilterBar = document.querySelector('#cascadeFilterBar');
+    const tcThemeInput = document.querySelector('#tcThemeInput');
+    const tcPersonInput = document.querySelector('#tcPersonInput');
+    const tcFilterDrop = document.querySelector('#tcFilterDrop');
+    const tcFilterActive = document.querySelector('#tcFilterActive');
+    let tcFilterTimer = null;
+    let tcFilterFocus = 'theme';
+
+    function updateTcCascadeFilterUi() {
+      const show = TimeCircleData.CONFIG.source === 'cascade';
+      if (cascadeFilterBar) cascadeFilterBar.hidden = !show;
+      const tid = TimeCircleData.CONFIG.themeId || '';
+      const pid = TimeCircleData.CONFIG.personId || '';
+      if (tcFilterActive) {
+        const parts = [];
+        if (tid) parts.push('Theme: ' + tid);
+        if (pid) parts.push('Person: ' + pid);
+        tcFilterActive.hidden = !parts.length;
+        tcFilterActive.textContent = parts.join(' · ');
+      }
+      if (tcThemeInput && tid) tcThemeInput.value = tid;
+      if (tcPersonInput && pid) tcPersonInput.value = pid;
+    }
+
+    function renderTcFilterDrop(items, kind) {
+      if (!tcFilterDrop) return;
+      if (!items || !items.length) {
+        tcFilterDrop.hidden = true;
+        tcFilterDrop.innerHTML = '';
+        return;
+      }
+      tcFilterDrop.hidden = false;
+      tcFilterDrop.innerHTML = items.map(item => {
+        if (kind === 'person') {
+          const pid = String(item.person_id || '').toLowerCase();
+          const meta = (item.archival_count || 0) + ' arch · ' + (item.day_count || 0) + ' tage';
+          return '<button type="button" data-kind="person" data-id="' + pid + '">' + (item.label || pid) +
+            '<small style="display:block;color:rgba(255,255,255,.45)">' + meta + '</small></button>';
+        }
+        const tid = String(item.theme_id || '').replace(/^theme_/, '');
+        const meta = (item.day_count || 0) + ' tage · ' + (item.archival_count || 0) + ' arch';
+        return '<button type="button" data-kind="theme" data-id="' + tid + '">' + tid +
+          '<small style="display:block;color:rgba(255,255,255,.45)">' + meta + '</small></button>';
+      }).join('');
+      tcFilterDrop.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tcFilterDrop.hidden = true;
+          if (btn.getAttribute('data-kind') === 'person') {
+            if (tcPersonInput) tcPersonInput.value = btn.getAttribute('data-id') || '';
+          } else if (tcThemeInput) {
+            tcThemeInput.value = btn.getAttribute('data-id') || '';
+          }
+          applyTcCascadeFilters();
+        });
+      });
+    }
+
+    async function applyTcCascadeFilters() {
+      const tid = tcThemeInput ? String(tcThemeInput.value || '').trim().replace(/^theme_/, '') : '';
+      const pid = tcPersonInput ? String(tcPersonInput.value || '').trim().toLowerCase().replace(/^person_/, '') : '';
+      TimeCircleData.setCascadeFilters(tid, pid);
+      try {
+        const u = new URL(location.href);
+        if (tid) u.searchParams.set('theme', tid); else u.searchParams.delete('theme');
+        if (pid) u.searchParams.set('person', pid); else u.searchParams.delete('person');
+        history.replaceState({}, '', u.pathname + u.search);
+      } catch (e) { /* ignore */ }
+      updateTcCascadeFilterUi();
+      await boot();
+    }
+
+    function wireTcFilterInput(inputEl, kind) {
+      if (!inputEl) return;
+      inputEl.addEventListener('focus', () => {
+        tcFilterFocus = kind;
+        const fn = kind === 'person'
+          ? TimeCircleData.fetchPersonSuggestions('')
+          : TimeCircleData.fetchThemeSuggestions('');
+        fn.then(items => renderTcFilterDrop(items, kind)).catch(() => renderTcFilterDrop([], kind));
+      });
+      inputEl.addEventListener('input', () => {
+        if (tcFilterTimer) clearTimeout(tcFilterTimer);
+        tcFilterTimer = setTimeout(() => {
+          tcFilterFocus = kind;
+          const q = inputEl.value.trim();
+          const fn = kind === 'person'
+            ? TimeCircleData.fetchPersonSuggestions(q)
+            : TimeCircleData.fetchThemeSuggestions(q);
+          fn.then(items => renderTcFilterDrop(items, kind)).catch(() => renderTcFilterDrop([], kind));
+        }, 180);
+      });
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyTcCascadeFilters();
+        }
+        if (e.key === 'Escape' && tcFilterDrop) tcFilterDrop.hidden = true;
+      });
+    }
+    wireTcFilterInput(tcThemeInput, 'theme');
+    wireTcFilterInput(tcPersonInput, 'person');
+    updateTcCascadeFilterUi();
+
+    let events = [];
+    let allDayEvents = [];
+    let phaseDefs = [];
+    let major = [];
+    let networkLinks = [];
+    let openedIndex = null;
+    let panelSuppressed = false;
+    let treeRenderGen = 0;
+    let lastAutoPanelIndex = null;
+    let dataPack = null;
+    let bundleCache = {};
+    let hourCache = {};
+    let zoom = { level: 'month', monthKey: null, dayId: null };
+    let scrollFocusIndex = 0;
+    const scrollSnapTrack = document.getElementById('scrollSnapTrack');
+    const scrubPrev = document.getElementById('scrubPrev');
+    const scrubNext = document.getElementById('scrubNext');
+    const scrubRange = document.getElementById('scrubRange');
+    const scrubLabel = document.getElementById('scrubLabel');
+    const indexOverlay = document.querySelector('#indexOverlay');
+    const indexPerimeterHit = document.querySelector('#indexPerimeterHit');
+    const tcCrosshairReadout = document.querySelector('#tcCrosshairReadout');
+    const tcCrosshairMark = document.querySelector('#tcCrosshairMark');
+    const indexDashboard = document.querySelector('#indexDashboard');
+    let indexPerimeterWired = false;
+    let indexPack = null;
+    let bloombergBar = null;
+    let scrubProgrammatic = false;
+
+    function isMobileScrollMode() {
+      return window.matchMedia('(max-width: 760px)').matches;
+    }
+
+    function rebuildScrollTrack() {
+      if (!scrollSnapTrack) return;
+      scrollSnapTrack.innerHTML = '';
+      if (!isMobileScrollMode() || !events.length) {
+        document.body.style.minHeight = `${Math.max(180, Math.round(events.length * (zoom.level === 'hour' ? 8 : 5.8)))}vh`;
+        return;
+      }
+      events.forEach((_, i) => {
+        const step = document.createElement('div');
+        step.className = 'scroll-snap-step';
+        step.dataset.index = String(i);
+        scrollSnapTrack.appendChild(step);
+      });
+      const stepVh = 68;
+      document.body.style.minHeight = `${Math.max(120, Math.round(events.length * stepVh + 24))}vh`;
+    }
+
+    function scrollToIndex(idx, opts) {
+      const smooth = !(opts && opts.smooth === false);
+      const i = Math.max(0, Math.min(events.length - 1, idx));
+      if (isMobileScrollMode() && scrollSnapTrack && scrollSnapTrack.children[i]) {
+        scrollSnapTrack.children[i].scrollIntoView({
+          behavior: smooth ? 'smooth' : 'auto',
+          block: 'center',
+        });
+        return;
+      }
+      const max = document.body.scrollHeight - innerHeight;
+      const top = (i / Math.max(1, events.length - 1)) * max;
+      if (smooth) scrollTo({ top, behavior: 'smooth' });
+      else scrollTo(0, top);
+    }
+
+    function syncMobileScrubber(active) {
+      if (!scrubRange || !events.length) return;
+      const max = Math.max(0, events.length - 1);
+      scrubRange.max = String(max);
+      scrubRange.value = String(active);
+      if (scrubLabel) scrubLabel.textContent = `${active + 1}/${events.length}`;
+      if (scrubPrev) scrubPrev.disabled = active <= 0;
+      if (scrubNext) scrubNext.disabled = active >= max;
+    }
+
+    function wireMobileScrubber() {
+      if (!scrubRange) return;
+      scrubRange.addEventListener('input', () => {
+        if (scrubProgrammatic) return;
+        const idx = parseInt(scrubRange.value, 10) || 0;
+        panelSuppressed = false;
+        scrollToIndex(idx, { smooth: false });
+        showPanelForIndex(idx, { force: true });
+        update();
+      });
+      scrubPrev?.addEventListener('click', () => {
+        uiSound('back');
+        const next = Math.max(0, scrollFocusIndex - 1);
+        panelSuppressed = false;
+        scrollToIndex(next);
+        showPanelForIndex(next, { force: true });
+        update();
+      });
+      scrubNext?.addEventListener('click', () => {
+        uiSound('send');
+        const next = Math.min(events.length - 1, scrollFocusIndex + 1);
+        panelSuppressed = false;
+        scrollToIndex(next);
+        showPanelForIndex(next, { force: true });
+        update();
+      });
+    }
+    wireMobileScrubber();
+
+    function setBoot(on, msg, isErr) {
+      bootOverlay.classList.toggle('hidden', !on);
+      bootText.innerHTML = isErr ? `<div class="err">${msg || 'Fehler'}</div>` : (msg || 'Lade…');
+    }
+
+    function refreshIndexOverlay(active) {
+      if (!indexPack || !events.length) return;
+      TimeCircleIndex.renderIndexOverlay(indexOverlay, events, indexPack, active, zoom.level);
+    }
+
+    function wireIndexPerimeter() {
+      if (!indexPerimeterHit) return;
+      if (!indexPerimeterWired) {
+        TimeCircleIndex.wireIndexDiagram({
+          hitSvg: indexPerimeterHit,
+          overlaySvg: indexOverlay,
+          readoutEl: tcCrosshairReadout,
+          crosshairEl: tcCrosshairMark,
+          getState: function () {
+            return { events: events, pack: indexPack, zoomLevel: zoom.level };
+          },
+          onSelect: function (idx, meta) {
+            panelSuppressed = false;
+            openIndexDashboard(idx, meta);
+            scrollToIndex(idx);
+            update();
+          },
+        });
+        indexPerimeterWired = true;
+      } else {
+        TimeCircleIndex.rebuildPerimeterHit(indexPerimeterHit);
+      }
+    }
+
+    function clearWheelDom() {
+      [bars, segAreas, data, dots, ticks, anchors, threads, bands, phasePaths, phaseArcs, phaseLabels].forEach(el => {
+        el.innerHTML = '';
+      });
+      network.innerHTML = '';
+      if (indexOverlay) indexOverlay.innerHTML = '';
+      if (indexPerimeterHit) {
+        var hitOnly = indexPerimeterHit.querySelector(".index-perimeter-hit");
+        if (hitOnly) hitOnly.remove();
+      }
+    }
+
+    function node(parent, tag, style, text = '') {
+      const n = document.createElement(tag);
+      n.style.cssText = style;
+      n.textContent = text;
+      parent.appendChild(n);
+      return n;
+    }
+
+    function segAngle(i) { return (-115 + i * STEP) * Math.PI / 180; }
+
+    function ringSlice(cx, cy, rIn, rOut, a1, a2) {
+      const large = Math.abs(a2 - a1) > Math.PI ? 1 : 0;
+      const x1 = cx + rOut * Math.cos(a1), y1 = cy + rOut * Math.sin(a1);
+      const x2 = cx + rOut * Math.cos(a2), y2 = cy + rOut * Math.sin(a2);
+      const x3 = cx + rIn * Math.cos(a2), y3 = cy + rIn * Math.sin(a2);
+      const x4 = cx + rIn * Math.cos(a1), y4 = cy + rIn * Math.sin(a1);
+      return `M ${x1} ${y1} A ${rOut} ${rOut} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 ${large} 0 ${x4} ${y4} Z`;
+    }
+
+    function arcPath(cx, cy, r, a1, a2) {
+      const large = Math.abs(a2 - a1) > Math.PI ? 1 : 0;
+      const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+      const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+      return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+    }
+
+    function svgEl(tag) { return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+
+    function weekIndex(i) {
+      const ev = events[i];
+      if (!ev?.dayId) return i + 1;
+      const kw = TimeCircleData.isoWeekForDay(ev.dayId);
+      return kw.kw || i + 1;
+    }
+
+    function phaseReadout(i) {
+      const e = events[i];
+      if (zoom.level === 'hour' && e) return (e.hourLabel || '—') + ' · ' + (zoom.dayId || '');
+      if (zoom.level === 'day' && e?.dayId) {
+        const p = phaseDefs.find(pd => i >= pd.start && i <= pd.end);
+        return TimeCircleData.formatDayLabel(e.dayId, 'iso') + ' · ' + (p?.label || ('KW ' + String(weekIndex(i)).padStart(2, '0')));
+      }
+      const p = phaseDefs.find(pd => i >= pd.start && i <= pd.end);
+      if (!p) return zoomLevelLabel();
+      return `${p.von}–${p.bis} · ${p.year || e?.year || ''}`;
+    }
+
+    function phaseAngles(start, end) {
+      const pad = (STEP / 2) * Math.PI / 180;
+      return [segAngle(start) - pad, segAngle(end) + pad];
+    }
+
+    function labelText(i, active) {
+      const e = events[i];
+      if (!e) return '—';
+      if (TimeCircleIndex && TimeCircleIndex.computeRingLabelPlans) {
+        const plans = TimeCircleIndex.computeRingLabelPlans(events, active, zoom.level);
+        const plan = plans[i] || { mode: 'title', hidden: false };
+        if (plan.hidden) return '';
+        return TimeCircleIndex.formatLabelText(e, plan.mode, zoom.level);
+      }
+      const dist = Math.abs(i - active);
+      const main = e.labelShort || e.title || e.dayId || '—';
+      if (i === active) return `${main}\n${TimeCircleIndex.metaLineForEvent(e, zoom.level)}`;
+      if (dist <= 2) return main;
+      return main;
+    }
+
+    function zoomLevelLabel() {
+      if (zoom.level === 'hour') return 'stunden · ' + (zoom.dayId || '');
+      if (zoom.level === 'day') return 'tage · ' + (zoom.monthKey || '');
+      return 'monate';
+    }
+
+    function updateZoomUi() {
+      zoomCrumb.textContent = zoomLevelLabel();
+      btnZoomOut.disabled = zoom.level === 'month';
+      btnZoomIn.disabled = zoom.level === 'hour';
+      btnZoomIn.textContent = zoom.level === 'month' ? '↳ tage' : zoom.level === 'day' ? '↳ stunden' : '↳ max';
+    }
+
+    async function applyZoomView(opts) {
+      const animate = opts && opts.animate;
+      const scrollEnd = !(opts && opts.scrollEnd === false);
+      try {
+        if (animate) wheelEl.classList.add('zoom-in-step');
+
+        if (zoom.level === 'month') {
+          events = TimeCircleData.aggregateByMonth(allDayEvents);
+          phaseDefs = TimeCircleData.buildPhaseDefsForYear(events);
+          major = TimeCircleData.buildMajorMarkers(events);
+          networkLinks = [];
+        } else if (zoom.level === 'day') {
+          events = TimeCircleData.daysInMonth(allDayEvents, zoom.monthKey);
+          phaseDefs = TimeCircleData.buildPhaseDefsForCalendarWeeks(events);
+          major = events.reduce((acc, ev, idx) => {
+            if (idx === 0 || (ev.dayId && /-01$/.test(ev.dayId))) acc.push(idx);
+            return acc;
+          }, []);
+          if (!major.length) major = [0];
+          networkLinks = TimeCircleData.buildThemeLinks(events, bundleCache);
+        } else if (zoom.level === 'hour') {
+          if (!hourCache[zoom.dayId]) {
+            setBoot(true, 'Stunden werden geladen…');
+            hourCache[zoom.dayId] = await TimeCircleData.loadHourBuckets(zoom.dayId);
+          }
+          events = hourCache[zoom.dayId];
+          phaseDefs = TimeCircleData.buildPhaseDefsForHours();
+          major = [0, 6, 12, 18];
+          networkLinks = [];
+        }
+
+        if (!events.length) throw new Error('Keine Segmente in dieser Zoom-Ebene');
+
+        openedIndex = null;
+        panelSuppressed = false;
+        lastAutoPanelIndex = null;
+        treeRenderGen += 1;
+        if (TimeCircleData.clearMmaDayCache) TimeCircleData.clearMmaDayCache();
+        if (TimeCircleHourPanel.clearFilters) TimeCircleHourPanel.clearFilters();
+        inlineTree.innerHTML = '';
+        inlineTree.classList.remove('hour-panel-open', 'graph-explorer-open');
+        clearWheelDom();
+        rebuildScrollTrack();
+        buildRingSegments();
+        buildPhaseRing();
+        buildWheelItems();
+        updateZoomUi();
+        drawNetwork(null);
+
+        requestAnimationFrame(() => {
+          if (scrollEnd && events.length) {
+            const target = zoom.level === 'month' ? events.length - 1 : 0;
+            scrollToIndex(target, { smooth: false });
+          }
+          if (animate) {
+            wheelEl.classList.remove('zoom-in-step');
+            wheelEl.classList.add('zoom-out-step');
+            setTimeout(() => wheelEl.classList.remove('zoom-out-step'), 300);
+          }
+          update();
+        });
+      } finally {
+        if (zoom.level !== 'hour' || hourCache[zoom.dayId]) setBoot(false);
+      }
+    }
+
+    function getActiveIndex() {
+      if (openedIndex != null) return openedIndex;
+      return scrollFocusIndex;
+    }
+
+    async function zoomToDayFromMonth(monthKey, dayId) {
+      if (!monthKey || !dayId) return;
+      zoom = { level: 'day', monthKey: monthKey, dayId: null };
+      await applyZoomView({ animate: true, scrollEnd: false });
+      const idx = events.findIndex(ev => ev.dayId === dayId);
+      panelSuppressed = false;
+      requestAnimationFrame(() => {
+        if (idx >= 0) {
+          scrollToIndex(idx, { smooth: false });
+          showPanelForIndex(idx, { force: true });
+          applyFocus(idx);
+          drawNetwork(idx);
+        }
+        update();
+      });
+    }
+
+    async function applyDeepLinkFromUrl() {
+      const cfg = TimeCircleData.CONFIG;
+      const dayId = String(cfg.dayId || '').trim();
+      const hourRaw = String(cfg.hour || '').trim();
+      const memId = String(cfg.memoryId || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dayId)) {
+        if (memId) graphNav.openMemory(memId, false);
+        return;
+      }
+      TimeCircleData.log('INFO', 'deep_link_start', {
+        day_id: dayId,
+        hour: hourRaw || null,
+        memory_id: memId || null,
+      });
+      const monthKey = dayId.slice(0, 7);
+      await zoomToDayFromMonth(monthKey, dayId);
+      if (hourRaw) {
+        const hourNum = parseInt(hourRaw, 10);
+        if (!isNaN(hourNum) && hourNum >= 0 && hourNum <= 23) {
+          zoom = { level: 'hour', monthKey: monthKey, dayId: dayId };
+          await applyZoomView({ animate: false, scrollEnd: false });
+          const idx = events.findIndex(ev => ev.zoomLevel === 'hour' && ev.hour === hourNum);
+          if (idx >= 0) {
+            panelSuppressed = false;
+            requestAnimationFrame(() => {
+              scrollToIndex(idx, { smooth: false });
+              showPanelForIndex(idx, { force: true });
+              applyFocus(idx);
+              drawNetwork(idx);
+              update();
+            });
+          }
+        }
+      }
+      if (memId) {
+        setTimeout(() => graphNav.openMemory(memId, false), 480);
+      }
+    }
+
+    async function zoomInFromFocus() {
+      const i = getActiveIndex();
+      const e = events[i];
+      if (!e) return;
+      if (zoom.level === 'month' && e.monthKey) {
+        zoom = { level: 'day', monthKey: e.monthKey, dayId: null };
+        await applyZoomView({ animate: true, scrollEnd: false });
+        return;
+      }
+      if (zoom.level === 'day' && e.dayId) {
+        zoom = { level: 'hour', monthKey: e.monthKey || e.dayId.slice(0, 7), dayId: e.dayId };
+        await applyZoomView({ animate: true, scrollEnd: false });
+      }
+    }
+
+    async function zoomOutOne() {
+      if (zoom.level === 'hour') {
+        zoom = { level: 'day', monthKey: zoom.monthKey, dayId: null };
+      } else if (zoom.level === 'day') {
+        zoom = { level: 'month', monthKey: null, dayId: null };
+      } else return;
+      await applyZoomView({ animate: true });
+    }
+
+    btnZoomIn.addEventListener('click', () => {
+      uiSound('send');
+      zoomInFromFocus();
+    });
+    btnZoomOut.addEventListener('click', () => {
+      uiSound('back');
+      zoomOutOne();
+    });
+
+    async function ensureBundle(dayId) {
+      if (bundleCache[dayId]) return bundleCache[dayId];
+      const b = await TimeCircleData.loadDayBundle(dayId);
+      bundleCache[dayId] = b;
+      networkLinks = TimeCircleData.buildThemeLinks(events, bundleCache);
+      return b;
+    }
+
+    function showPanelForIndex(i, opts) {
+      const force = opts && opts.force;
+      if (i == null || i < 0 || i >= events.length) return;
+      if (panelSuppressed && !force) return;
+      const sameIndex = lastAutoPanelIndex === i && openedIndex === i && !inlineTree.classList.contains('graph-explorer-open');
+      if (sameIndex && !force) return;
+      if (inlineTree.classList.contains('graph-explorer-open')) {
+        graphNav.close();
+        graphNav.wheelIndex = null;
+      }
+      lastAutoPanelIndex = i;
+      openedIndex = i;
+      panelSuppressed = false;
+      inlineTree.setAttribute('aria-hidden', 'false');
+      renderInlineTree(i);
+      const e = events[i];
+      if (e?.zoomLevel === 'month') year.textContent = e.year || '—';
+      else if (e?.zoomLevel === 'hour') year.textContent = (e.hourLabel || '').replace(':00', 'h');
+      else if (e) year.textContent = e.year;
+    }
+
+    async function renderInlineTree(i) {
+      const gen = ++treeRenderGen;
+      inlineTree.innerHTML = '';
+      if (i === null) return;
+      const e = events[i];
+      const c = palette[i % palette.length];
+      inlineTree.style.setProperty('--c', c);
+
+      if (e.zoomLevel === 'month') {
+        inlineTree.innerHTML = `<button type="button" class="tree-close" onclick="window.__closeTree()">×</button>
+          <div class="tree-path"><span><b>monat</b> ${e.title}</span></div>
+          <div class="tree-branch" style="--depth:0;--c:${c}"><span class="tree-level">Σ</span>${e.dayCount} tage · ${e.themeCount} themes<small>↳ reinzoomen für tages-ring</small></div>`;
+        (e.childDayIds || []).forEach((did, depth) => {
+          const div = document.createElement('div');
+          div.className = 'tree-branch tree-branch-clickable tree-branch-zoom-day';
+          div.style.cssText = `--depth:${depth + 1};--c:${c}`;
+          div.innerHTML = `<span class="tree-level">·</span>${TimeCircleData.formatDayLabel(did, 'short')}<small>${did}</small>`;
+          div.addEventListener('click', () => zoomToDayFromMonth(e.monthKey, did));
+          inlineTree.appendChild(div);
+        });
+        return;
+      }
+
+      if (e.zoomLevel === 'hour') {
+        inlineTree.classList.add('hour-panel-open');
+        TimeCircleHourPanel.render(inlineTree, {
+          dayId: zoom.dayId,
+          hour: e.hour,
+          color: c,
+          gen: gen,
+          genCheck: function () { return gen === treeRenderGen; },
+        });
+        return;
+      }
+      inlineTree.classList.remove('hour-panel-open');
+
+      inlineTree.innerHTML = `<button type="button" class="tree-close" onclick="window.__closeTree()">×</button>
+        <div class="tree-path">
+          <span><b>${dataPack?.source === 'mma' ? 'MMA' : 'TAG'}</b> ${e.dayId || e.title}</span>
+        </div>
+        <div class="tree-branch" style="--depth:0;--c:${c}"><span class="tree-level">·</span><span class="tree-branch-content">${e.title}<small>${e.copy}</small></span></div>
+        <p style="color:rgba(255,255,255,.55);font:10px SFMono-Regular,Consolas,monospace;margin:8px 0 0">Lade Kaskade…</p>`;
+
+      if (dataPack?.source === 'mma') {
+        const branches = (e.pairs || []).slice(0, 6).map((p, depth) => {
+          const title = `${p.tag_a} × ${p.tag_b}`.replace(/_/g, ' ');
+          return `<div class="tree-branch" style="--depth:${depth + 1};--c:${c}"><span class="tree-level">${depth + 2}</span>${title}<small>${p.count} co-events · ${e.dayId}</small></div>`;
+        }).join('');
+        inlineTree.querySelector('.tree-path').insertAdjacentHTML('afterend', branches || '<div class="tree-branch" style="--depth:1;--c:' + c + '"><span class="tree-level">2</span>Keine Tag-Paare</div>');
+        inlineTree.querySelector('p')?.remove();
+        return;
+      }
+
+      try {
+        const bundle = await ensureBundle(e.dayId);
+        if (gen !== treeRenderGen) return;
+        inlineTree.querySelector('p')?.remove();
+        let depth = 1;
+        (bundle.themes || []).forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'tree-branch tree-branch-clickable';
+          div.style.cssText = `--depth:${depth};--c:${c}`;
+          const themeId = String(t.theme_id || t.id || '').replace(/^theme_/, '');
+          div.innerHTML = `<span class="tree-level">${depth + 1}</span>${t.label}<small>${(t.archivals || []).length} archival(s) · theme öffnen</small>`;
+          div.addEventListener('click', () => {
+            inlineTree.style.setProperty('--c', c);
+            graphNav.wheelIndex = i;
+            graphNav.openTheme(themeId);
+          });
+          inlineTree.appendChild(div);
+          depth += 1;
+          (t.archivals || []).slice(0, 4).forEach(a => {
+            const ad = document.createElement('div');
+            ad.className = 'tree-branch tree-branch-clickable';
+            ad.style.cssText = `--depth:${depth};--c:${c}`;
+            const preview = (a.l1 || a.content_preview || '').substring(0, 160);
+            const memId = a.memory_id || '';
+            const mediaBadge = (window.TimeCircleGraphNav && window.TimeCircleGraphNav.mediaBadgeHtml)
+              ? window.TimeCircleGraphNav.mediaBadgeHtml(a, true).replace('graph-media-badge', 'tree-media-badge graph-media-badge')
+              : '';
+            ad.innerHTML = `<span class="tree-level">M</span>${preview || memId}${mediaBadge}<small>${memId}</small>`;
+            ad.addEventListener('click', () => {
+              inlineTree.style.setProperty('--c', c);
+              graphNav.wheelIndex = i;
+              graphNav.openMemory(memId);
+            });
+            inlineTree.appendChild(ad);
+          });
+        });
+        if (!(bundle.themes || []).length) {
+          inlineTree.insertAdjacentHTML('beforeend', `<div class="tree-branch" style="--depth:1;--c:${c}"><span class="tree-level">2</span>Keine Themes</div>`);
+        }
+      } catch (err) {
+        if (gen !== treeRenderGen) return;
+        const errEl = inlineTree.querySelector('p');
+        if (errEl) errEl.textContent = 'Fehler: ' + err.message;
+      }
+    }
+
+    function buildPhaseRing() {
+      phasePaths.innerHTML = '';
+      phaseArcs.innerHTML = '';
+      phaseLabels.innerHTML = '';
+      phaseDefs.forEach((p, pi) => {
+        const [a1, a2] = phaseAngles(p.start, p.end);
+        const arc = svgEl('path');
+        arc.classList.add('phase-arc', 'month');
+        arc.dataset.phase = String(pi);
+        arc.setAttribute('d', ringSlice(CX, CY, R_PHASE_IN, R_PHASE_OUT, a1, a2));
+        phaseArcs.appendChild(arc);
+        const arcId = `phase-label-arc-${pi}`;
+        const arcDef = svgEl('path');
+        arcDef.id = arcId;
+        arcDef.setAttribute('d', arcPath(CX, CY, (R_PHASE_IN + R_PHASE_OUT) / 2, a1, a2));
+        phasePaths.appendChild(arcDef);
+        const text = svgEl('text');
+        text.classList.add('phase-label');
+        text.dataset.phase = String(pi);
+        const tp = svgEl('textPath');
+        tp.setAttribute('href', `#${arcId}`);
+        tp.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${arcId}`);
+        tp.setAttribute('startOffset', '12%');
+        tp.textContent = (zoom.level === 'day' && p.kw)
+          ? p.label
+          : (p.start === 0 || p.label.includes(String(p.year)) ? `${String(p.year).slice(2)} ${p.label}` : p.label);
+        text.appendChild(tp);
+        phaseLabels.appendChild(text);
+      });
+      for (let i = 0; i < events.length; i++) {
+        const [a1, a2] = phaseAngles(i, i);
+        const week = svgEl('path');
+        week.classList.add('phase-arc', 'week');
+        week.dataset.week = String(i);
+        week.setAttribute('d', ringSlice(CX, CY, R_WEEK_IN, R_WEEK_OUT, a1, a2));
+        phaseArcs.appendChild(week);
+      }
+    }
+
+    function buildRingSegments() {
+      segAreas.innerHTML = '';
+      for (let i = 0; i < events.length; i++) {
+        const mid = segAngle(i);
+        const a1 = mid - (STEP / 2) * Math.PI / 180;
+        const a2 = mid + (STEP / 2) * Math.PI / 180;
+        const c = palette[i % palette.length];
+        const area = svgEl('path');
+        area.classList.add('seg-area');
+        area.dataset.index = i;
+        area.setAttribute('d', ringSlice(CX, CY, R_IN, R_OUT, a1, a2));
+        area.setAttribute('fill', `${c}11`);
+        area.onclick = () => openPanel(i);
+        area.onmouseenter = () => setHover(i, true);
+        area.onmouseleave = () => setHover(i, false);
+        segAreas.appendChild(area);
+      }
+    }
+
+    function buildWheelItems() {
+      indexPack = TimeCircleIndex.computeBarPack(events, zoom.level);
+      for (let i = 0; i < events.length; i++) {
+        const a = -115 + i * STEP;
+        const len = indexPack.lengths[i] || TimeCircleIndex.MIN_LEN_PX;
+        const alpha = .5 + (indexPack.values[i] / Math.max(1, indexPack.max)) * 0.45;
+        const c = palette[i % palette.length];
+        const e = events[i];
+        const bar = node(bars, 'button', `--a:${a}deg;--len:${len}px;--alpha:${alpha};--c:${c};`);
+        bar.type = 'button';
+        bar.dataset.index = i;
+        bar.onclick = () => openPanel(i);
+        bar.onmouseenter = () => setHover(i, true);
+        bar.onmouseleave = () => setHover(i, false);
+        node(ticks, 'i', `--a:${a}deg;`);
+        const anchor = node(anchors, 'button', `--a:${a}deg;--c:${c};`);
+        anchor.type = 'button';
+        anchor.dataset.index = i;
+        anchor.onclick = () => openPanel(i);
+        const label = node(data, 'button', `--a:${a}deg;--c:${c};`, labelText(i, Math.floor(events.length / 2)));
+        label.type = 'button';
+        label.dataset.index = i;
+        label.setAttribute('aria-label', `${e.year} ${e.title} öffnen`);
+        label.onclick = () => openPanel(i);
+        label.onmouseenter = () => setHover(i, true);
+        label.onmouseleave = () => setHover(i, false);
+        if (i % 2 === 0) node(threads, 'i', `--a:${a + 11}deg;--len:${38 + (i % 70) * 3}px;--c:${c};`);
+      }
+      major.forEach((entry, index) => {
+        const a = -115 + entry * STEP;
+        const c = palette[index % palette.length];
+        node(bands, 'i', `--a:${a}deg;--len:${70 + index * 8}px;--c:${c};`);
+        const ev = events[entry];
+        let dotLabel = String(index + 1);
+        if (zoom.level === 'month' && ev?.year) dotLabel = ev.year.slice(2);
+        if (zoom.level === 'day' && ev?.dayId) dotLabel = ev.dayId.slice(8, 10);
+        if (zoom.level === 'hour' && ev?.hour != null) dotLabel = String(ev.hour).padStart(2, '0');
+        const d = node(dots, 'button', `--a:${a + 1}deg;--c:${c};`, dotLabel);
+        d.type = 'button';
+        d.onclick = () => openPanel(entry);
+      });
+      refreshIndexOverlay(getActiveIndex());
+      wireIndexPerimeter();
+    }
+
+    function openIndexDashboard(i, meta) {
+      if (!indexDashboard || !TimeCircleIndex.openDashboard) return;
+      document.body.classList.add('idx-dash-open');
+      TimeCircleIndex.openDashboard(indexDashboard, {
+        index: i,
+        events: events,
+        pack: indexPack,
+        zoomLevel: zoom.level,
+        source: meta && meta.source,
+        onOpenDetail: function (idx) {
+          openPanel(idx, 'index_dashboard');
+        },
+        onClose: function () {
+          document.body.classList.remove('idx-dash-open');
+        },
+      });
+      applyFocus(i);
+      drawNetwork(i);
+      const e = events[i];
+      if (e) {
+        copy.textContent = (TimeCircleIndex.timeLabelForEvent(e, zoom.level) || '') +
+          ' · IDX ' + TimeCircleIndex.formatIndexLabel(indexPack?.values?.[i] ?? 0) + ' — index dashboard';
+      }
+    }
+
+    function openPanel(i, source) {
+      uiSound('receive');
+      panelSuppressed = false;
+      showPanelForIndex(i, { force: true });
+      const e = events[i];
+      if (e) {
+        copy.textContent = e.copy + (e.zoomLevel === 'day' ? ' — kaskadede · klick ↳ für stunden' : ' — fokus');
+      }
+      applyFocus(i);
+      drawNetwork(i);
+      inlineTree.classList.remove('index-open-pulse');
+      void inlineTree.offsetWidth;
+      inlineTree.classList.add('index-open-pulse');
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'INFO',
+        module: 'time_circle_app',
+        message: 'detail_panel_opened',
+        context: {
+          index: i,
+          source: source || 'wheel_segment',
+          zoom: zoom.level,
+          day_id: e?.dayId || null,
+          title: e?.title || null,
+        },
+      }));
+    }
+
+    function setHover(i, on) {
+      document.querySelectorAll(`[data-index="${i}"]`).forEach(el => el.classList.toggle('active', on));
+      if (on) drawNetwork(i);
+      else if (openedIndex === null) drawNetwork(null);
+    }
+
+    function spurRadiusSvg() {
+      const wheel = document.querySelector('.wheel');
+      if (!wheel?.offsetWidth) return R_SPUR;
+      const wheelHalf = wheel.offsetWidth / 2;
+      const vmin = Math.min(innerWidth, innerHeight) / 100;
+      const spurVmin = parseFloat(getComputedStyle(root).getPropertyValue('--ring-spur')) || 33.8;
+      return (spurVmin * vmin / wheelHalf) * 500;
+    }
+
+    function anchorPoint(index) {
+      const angle = segAngle(index);
+      const r = spurRadiusSvg();
+      return { x: CX + Math.cos(angle) * r, y: CY + Math.sin(angle) * r };
+    }
+
+    function linkFade(a, b, active) {
+      if (active === null) return 0.35;
+      const fa = Math.max(0.06, 1 - Math.abs((a - active) * STEP) / 34);
+      const fb = Math.max(0.06, 1 - Math.abs((b - active) * STEP) / 34);
+      return Math.min(fa, fb) * 0.62;
+    }
+
+    function drawNetwork(active = null) {
+      network.innerHTML = '';
+      (networkLinks.length ? networkLinks : []).forEach(([a, b]) => {
+        if (a >= events.length || b >= events.length) return;
+        const p1 = anchorPoint(a);
+        const p2 = anchorPoint(b);
+        const c = palette[(a + b) % palette.length];
+        const hot = active === a || active === b;
+        const opacity = hot ? Math.max(0.72, linkFade(a, b, active)) : linkFade(a, b, active);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`);
+        path.style.setProperty('--c', c);
+        path.setAttribute('opacity', opacity.toFixed(2));
+        if (hot) path.classList.add('hot');
+        network.appendChild(path);
+      });
+    }
+
+    function updatePhasePulse(active) {
+      const activeMonth = phaseDefs.findIndex(p => active >= p.start && active <= p.end);
+      phaseDefs.forEach((p, pi) => {
+        const [a1, a2] = phaseAngles(p.start, p.end);
+        const dist = Math.abs(pi - activeMonth);
+        const fade = Math.max(0.1, 1 - dist * 0.38);
+        const rOut = pi === activeMonth ? R_PHASE_PULSE : R_PHASE_OUT + fade * 4;
+        const arc = phaseArcs.querySelector(`.phase-arc.month[data-phase="${pi}"]`);
+        if (!arc) return;
+        arc.setAttribute('d', ringSlice(CX, CY, R_PHASE_IN, rOut, a1, a2));
+        arc.setAttribute('opacity', fade.toFixed(2));
+        arc.classList.toggle('active', pi === activeMonth);
+        const label = phaseLabels.querySelector(`[data-phase="${pi}"]`);
+        if (label) {
+          label.setAttribute('opacity', fade.toFixed(2));
+          label.classList.toggle('active', pi === activeMonth);
+        }
+      });
+      phaseArcs.querySelectorAll('.phase-arc.week').forEach(el => {
+        const wi = Number(el.dataset.week);
+        const angDist = Math.abs((wi - active) * STEP);
+        const fade = Math.max(0.06, 1 - angDist / 18);
+        const rOut = wi === active ? R_WEEK_OUT + 10 : R_WEEK_OUT + fade * 2;
+        const [a1, a2] = phaseAngles(wi, wi);
+        el.setAttribute('d', ringSlice(CX, CY, R_WEEK_IN, rOut, a1, a2));
+        el.setAttribute('opacity', fade.toFixed(2));
+        el.classList.toggle('active', wi === active);
+      });
+    }
+
+    function applyFocus(active) {
+      document.querySelectorAll('.data button, .bars button, .anchors button, .ticks i, .threads i, .seg-area').forEach(el => {
+        const idx = Number(el.dataset.index);
+        if (Number.isNaN(idx)) return;
+        const angDist = Math.abs((idx - active) * STEP);
+        const fade = Math.max(0.08, 1 - angDist / 34);
+        const focus = Math.max(0.95, 2.1 - angDist * 0.055);
+        el.style.setProperty('--focus', focus.toFixed(2));
+        el.style.setProperty('--fade', fade.toFixed(2));
+        el.classList.toggle('active', idx === active);
+        if (el.classList.contains('seg-area')) el.setAttribute('opacity', fade.toFixed(2));
+        if (data.contains(el)) {
+          const plans = TimeCircleIndex.computeRingLabelPlans(events, active, zoom.level);
+          const plan = plans[idx] || { mode: 'title', hidden: false, staggerPx: 0 };
+          TimeCircleIndex.applyRingLabelPlan(el, plan, labelText(idx, active));
+          el.classList.toggle('near', plan.mode === 'meta' || plan.mode === 'full');
+        }
+      });
+      document.querySelectorAll('.dots button').forEach((b, k) => b.classList.toggle('active', major[k] === active));
+      updatePhasePulse(active);
+      root.style.setProperty('--beam-opacity', panelSuppressed ? '0.88' : '0.45');
+      refreshIndexOverlay(active);
+    }
+
+    function update() {
+      if (!events.length) return;
+      let active;
+      if (isMobileScrollMode() && scrollSnapTrack && scrollSnapTrack.children.length) {
+        const mid = scrollY + innerHeight * 0.42;
+        let best = 0;
+        let bestDist = Infinity;
+        scrollSnapTrack.querySelectorAll('.scroll-snap-step').forEach((el, i) => {
+          const center = el.offsetTop + el.offsetHeight * 0.5;
+          const dist = Math.abs(center - mid);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = i;
+          }
+        });
+        active = best;
+        const p = events.length > 1 ? active / (events.length - 1) : 0;
+        root.style.setProperty('--progress', p.toFixed(4));
+      } else {
+        const max = document.body.scrollHeight - innerHeight;
+        const p = max ? scrollY / max : 0;
+        active = Math.min(events.length - 1, Math.max(0, Math.round(p * (events.length - 1))));
+        root.style.setProperty('--progress', p.toFixed(4));
+      }
+      const focusChanged = active !== scrollFocusIndex;
+      scrollFocusIndex = active;
+      if (focusChanged) maybeScrollSnapSound();
+      const activeAngle = -115 + active * STEP;
+      root.style.setProperty('--rotation', `${FOCUS_DEG - activeAngle}deg`);
+      applyFocus(active);
+      if (focusChanged) panelSuppressed = false;
+      if (!panelSuppressed && (focusChanged || openedIndex === null)) {
+        showPanelForIndex(active);
+      }
+      const ae = events[active];
+      if (!panelSuppressed && openedIndex == null) {
+        if (ae?.zoomLevel === 'month') year.textContent = ae.year || '—';
+        else if (ae?.zoomLevel === 'hour') year.textContent = ae.hourLabel?.replace(':00', 'h') || '—';
+        else year.textContent = ae?.year || '—';
+      }
+      phase.textContent = phaseReadout(active);
+      const panelIdx = panelSuppressed ? null : (openedIndex ?? active);
+      copy.textContent = panelSuppressed
+        ? ae?.copy + ' — scroll · ↳ reinzoomen für nächste ebene'
+        : (events[panelIdx]?.copy || ae?.copy) + ' — panel folgt scroll';
+      drawNetwork(panelSuppressed ? active : (openedIndex ?? active));
+      if (dataPack?.source === 'cascade' && ae?.dayId && ae.zoomLevel === 'day') {
+        ensureBundle(ae.dayId).catch(() => {});
+      }
+      if (ae?.zoomLevel === 'hour' && zoom.dayId && TimeCircleData.loadMmaDayEvents) {
+        TimeCircleData.loadMmaDayEvents(zoom.dayId).catch(() => {});
+      }
+      scrubProgrammatic = true;
+      syncMobileScrubber(active);
+      scrubProgrammatic = false;
+    }
+
+    window.__closeTree = () => {
+      graphNav.wheelIndex = null;
+      graphNav.close();
+      openedIndex = null;
+      lastAutoPanelIndex = null;
+      panelSuppressed = true;
+      treeRenderGen += 1;
+      inlineTree.innerHTML = '';
+      inlineTree.classList.remove('graph-explorer-open');
+      inlineTree.setAttribute('aria-hidden', 'true');
+      drawNetwork(null);
+      update();
+    };
+
+    window.__restoreInlineTree = (idx) => {
+      graphNav.close();
+      panelSuppressed = false;
+      showPanelForIndex(idx, { force: true });
+      update();
+    };
+
+    async function mountApp(pack) {
+      dataPack = pack;
+      allDayEvents = pack.events;
+      bundleCache = {};
+      hourCache = {};
+      openedIndex = null;
+      panelSuppressed = false;
+      lastAutoPanelIndex = null;
+      treeRenderGen = 0;
+      zoom = { level: 'month', monthKey: null, dayId: null };
+      document.getElementById('navCascade').classList.toggle('active', pack.source === 'cascade');
+      document.getElementById('navMma').classList.toggle('active', pack.source === 'mma');
+      titleHint.textContent = pack.source === 'cascade' && (TimeCircleData.CONFIG.themeId || TimeCircleData.CONFIG.personId)
+        ? ('Filter: ' + [TimeCircleData.CONFIG.personId && ('Person ' + TimeCircleData.CONFIG.personId),
+            TimeCircleData.CONFIG.themeId && ('Theme ' + TimeCircleData.CONFIG.themeId)].filter(Boolean).join(' · ') +
+            ' · scroll = panel folgt fokus')
+        : 'Monate im reifen · scroll · ↳ reinzoomen → tage → stunden. · Zuerst 🔊 tippen für Sounds';
+      updateTcCascadeFilterUi();
+      if (!bloombergBar) bloombergBar = TimeCircleBloomberg.mount(document.getElementById('bloombergBar'));
+      await applyZoomView({ scrollEnd: true });
+      await applyDeepLinkFromUrl();
+    }
+
+    window.__tcReloadCascade = async function () {
+      await boot();
+    };
+
+    window.__tcGetBloombergState = function () {
+      return {
+        events: events,
+        pack: indexPack,
+        zoomLevel: zoom.level,
+        activeIndex: getActiveIndex(),
+      };
+    };
+
+    async function boot() {
+      setBoot(true, TimeCircleData.CONFIG.source === 'mma' ? 'MMA-Buckets werden geladen…' : 'Kaskade-Tage werden geladen…');
+      try {
+        const pack = await TimeCircleData.load();
+        if (!pack.events.length) throw new Error('Keine Ereignisse in der gewählten Quelle');
+        await mountApp(pack);
+        if (pack.source === 'cascade') {
+          pack.events.slice(-8).forEach(ev => {
+            ensureBundle(ev.dayId).catch(() => null);
+          });
+        }
+      } catch (err) {
+        setBoot(true, `Daten konnten samht geladen werden: ${err.message}`, true);
+        TimeCircleData.log('ERROR', 'boot_failed', { error: String(err) });
+        return;
+      }
+      setBoot(false);
+    }
+
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', () => {
+      rebuildScrollTrack();
+      TimeCircleIndex.rebuildPerimeterHit(indexPerimeterHit);
+      refreshIndexOverlay(getActiveIndex());
+      update();
+    });
+    boot();
+    }
+  })();
+  </script>
+</body>
+</html>
