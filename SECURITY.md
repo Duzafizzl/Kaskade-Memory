@@ -11,14 +11,14 @@ Kaskade Memory is a **demo-oriented memory engine**, not a production secrets va
 
 ## Reporting
 
-Please report vulnerabilities via GitHub Security Advisories on this repository.
+Please report vulnerabilities via [GitHub Security Advisories](https://github.com/Duzafizzl/Kaskade-Memory/security/advisories).
 
 ## Do not commit
 
 - `.env` files with real API keys
-- Production database dumps
-- Private conversation archives
+- Production database dumps or private conversation archives
+- Real person identifiers from non-demo datasets
 
 ## CI
 
-`scripts/export_check.py` blocks common secret patterns and private person identifiers before release.
+`scripts/export_check.py` scans for common secret patterns and blocked private identifiers before release.
