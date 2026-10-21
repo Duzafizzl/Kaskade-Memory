@@ -1,13 +1,13 @@
 /**
- * archive_prose_render.js – Gemeinsame Archiv-Lesetypografie (/stream/archive + Zeitkreis).
+ * archive_prose_render.js – Shared archival reading typography for Time Circle.
  * Created: 2026-06-29
- * Last updated: 2026-06-29
+ * Last updated: 2026-10-21
  */
 (function (root) {
   "use strict";
 
   var ERIP_BLOCK_MARKER = "**ERIP (required):**";
-  var MEINE_NOTIZ_HDR = "**Meine Notiz:**";
+  var MEINE_NOTIZ_HDR = "**My note:**";
 
   function escapeHtml(s) {
     if (s == null) return "";
@@ -19,7 +19,7 @@
   function splitArchiveNoteAndBody(content, apiNote) {
     var c = content || "";
     var displayNote = apiNote != null && String(apiNote).trim() ? String(apiNote).trim() : "";
-    if (displayNote === "(keine Notiz)") displayNote = "";
+    if (displayNote === "(keine Notiz)" || displayNote === "(no note)") displayNote = "";
     var idx = c.indexOf(MEINE_NOTIZ_HDR);
     var bodyMain = c;
     if (idx >= 0) {
@@ -36,11 +36,11 @@
         bodyMain = before;
       }
     }
-    if (displayNote === "(keine Notiz)") displayNote = "";
+    if (displayNote === "(keine Notiz)" || displayNote === "(no note)") displayNote = "";
     return { displayNote: displayNote, bodyMain: (bodyMain || "").trim() };
   }
 
-  /** Einfaches Lesen: Überschriften, **fett**, Absätze (Inhalt vorher escapen). */
+  /** Simple read: headings, **bold**, paragraphs. Escape content first. */
   function renderArchivedMarkdown(raw) {
     if (!raw) return '<p class="amd-p amd-empty">—</p>';
     var t = escapeHtml(raw);
@@ -88,28 +88,28 @@
   function buildArchiveMediaHtml(detail) {
     if (!detail || !detail.media || !detail.media.length) return "";
     var agentId = (detail.agent_id || "").trim();
-    var html = '<section class="archive-modal-media" aria-label="Verknüpfte Bilder">';
-    html += '<div class="archive-modal-media-kicker">Verknüpftes Bild</div>';
+    var html = '<section class="archive-modal-media" aria-label="Linked images">';
+    html += '<div class="archive-modal-media-kicker">Linked image</div>';
     detail.media.forEach(function (item, idx) {
       var src = mediaImgSrc(item, agentId, false);
       if (!src) return;
       var fullSrc = mediaImgSrc(item, agentId, true);
-      html += '<a href="' + escapeHtml(fullSrc || src) + '" target="_blank" rel="noopener" title="Vollbild öffnen">';
+      html += '<a href="' + escapeHtml(fullSrc || src) + '" target="_blank" rel="noopener" title="Open full image">';
       html +=
         '<img class="archive-modal-media-img" src="' +
         escapeHtml(src) +
-        '" alt="Archiv-Bild ' +
+        '" alt="Archival image ' +
         (idx + 1) +
         '" loading="lazy" decoding="async" onerror="this.style.display=\'none\';var e=this.nextElementSibling;if(e)e.style.display=\'block\'" />';
       html += "</a>";
       html +=
         '<div class="archive-modal-media-meta" style="margin-top:6px"><a href="' +
         escapeHtml(fullSrc || src) +
-        '" target="_blank" rel="noopener">Vollbild</a> · Vorschau komprimiert</div>';
+        '" target="_blank" rel="noopener">Full image</a> · Compressed preview</div>';
       html +=
-        '<div class="archive-modal-media-err" style="display:none">Bild konnte samht geladen werden. <a href="' +
+        '<div class="archive-modal-media-err" style="display:none">Could not load the image. <a href="' +
         escapeHtml(src) +
-        '" target="_blank" rel="noopener">Direkt öffnen</a></div>';
+        '" target="_blank" rel="noopener">Open directly</a></div>';
       var meta = [];
       if (item.media_asset_id) meta.push("media: " + item.media_asset_id);
       if (item.provenance && item.provenance.source_username) meta.push(item.provenance.source_username);
@@ -164,8 +164,8 @@
     }
     if (displayNote) {
       html +=
-        '<section class="archive-modal-note-card" aria-label="Notiz">' +
-        '<div class="archive-modal-note-kicker">Notiz</div>' +
+        '<section class="archive-modal-note-card" aria-label="Note">' +
+        '<div class="archive-modal-note-kicker">Note</div>' +
         '<div class="archive-modal-note-text">' +
         renderArchivedMarkdown(displayNote) +
         "</div></section>";

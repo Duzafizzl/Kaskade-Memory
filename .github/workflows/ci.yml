@@ -1,3 +1,7 @@
+# File: ci.yml
+# Description: Tree leak scan plus pytest on every push and pull request.
+# Created: 2026-08-28
+# Last updated: 2026-10-20
 name: ci
 
 on:
@@ -14,5 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: python scripts/export_check.py
-      - run: pytest -q
+      - name: Export leak scan (working tree)
+        run: python scripts/export_check.py
+      - name: Unit tests
+        run: pytest -q

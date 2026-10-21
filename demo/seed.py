@@ -19,6 +19,18 @@ sys.path.insert(0, str(ROOT))
 from kaskade.erip.weighting import archival_erip_suffix_block
 from kaskade.memory.postgres_store import add_graph_edge, connect, init_schema, insert_archival, insert_core_block, insert_spark_audit
 
+
+def ensure_day_node(conn, day: str) -> None:
+    conn.execute(
+        """
+        INSERT INTO memory_graph_nodes (id, node_type, ref_id, label, metadata)
+        VALUES (%s, 'day', %s, %s, '{}'::jsonb)
+        ON CONFLICT (id) DO NOTHING
+        """,
+        (f"day_{day}", day, f"day:{day}"),
+    )
+    conn.commit()
+
 SAMPLE = archival_erip_suffix_block(4, 3, 3, 2)
 
 
@@ -40,6 +52,7 @@ def main() -> None:
                 metadata={"episode_date": day, "theme_id": "demo_notes", "recall_inject_l1": f"Alex · demo · {day}"},
                 tags=["demo"],
             )
+            ensure_day_node(conn, day)
             add_graph_edge(conn, src=f"day_{day}", dst=f"mem-{mid}", edge_type="CONTAINS")
             print(f"✅ [{i+2}/{total_steps}] ({pct:.1f}%) Seeded day {day}", end="\r", flush=True)
         print(f"\n✅ [{13}/{total_steps}] (92.9%) Core blocks", flush=True)

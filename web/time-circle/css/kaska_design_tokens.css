@@ -1,8 +1,7 @@
 /**
- * kaskade_design_tokens.css – Kaska Time Circle CI Design Tokens für stream_dashboard.
- * Extrahiert aus cascade_time_circle.html, Bloomberg/Index/Graph-Panels, clicky_ui.css.
+ * kaska_design_tokens.css – Kaskade Time Circle design tokens and board component overrides.
  * Created: 2026-06-30
- * Last updated: 2026-08-09 (exclude fixed overlays from board stacking)
+ * Last updated: 2026-10-21
  */
 
 :root {
@@ -230,7 +229,7 @@
   --kaskade-on-cyan: #1d191a;
 }
 
-/* ─── Legacy Aliases (stream_dashboard pages) ────────────────────────────── */
+/* ─── Legacy token aliases for older Time Circle pages ───────────────────── */
 
 :root {
   --bg: var(--kaskade-bg);
@@ -300,72 +299,72 @@ body.kaskade-board > .plan-modal-overlay {
   z-index: 10000;
 }
 
-/* ─── HeyClicky overrides (Kaska palette statt Blau) ─────────────────────── */
+/* ─── Board UI overrides (Kaska palette instead of blue) ─────────────────────── */
 
-body.kaskade-board .clicky-glow-active {
+body.kaskade-board .kaskade-ui-glow-active {
   box-shadow:
     0 0 0 1px var(--kaskade-cyan-45),
     0 0 28px var(--kaskade-cyan-20),
     inset 0 0 24px var(--kaskade-cyan-08);
 }
 
-body.kaskade-board .clicky-glow-success {
+body.kaskade-board .kaskade-ui-glow-success {
   box-shadow:
     0 0 0 1px rgba(157, 199, 109, 0.45),
     0 0 24px rgba(157, 199, 109, 0.18);
 }
 
-body.kaskade-board .clicky-glow-error {
+body.kaskade-board .kaskade-ui-glow-error {
   box-shadow:
     0 0 0 1px rgba(255, 138, 138, 0.5),
     0 0 24px rgba(255, 138, 138, 0.2);
 }
 
-body.kaskade-board .clicky-phase-bar {
+body.kaskade-board .kaskade-ui-phase-bar {
   background: var(--kaskade-bg-panel);
   border-color: var(--kaskade-border);
   color: var(--kaskade-muted);
 }
 
-body.kaskade-board .clicky-phase-bar .clicky-phase-label,
-body.kaskade-board .clicky-phase-bar[data-phase="working"] .clicky-phase-label,
-body.kaskade-board .clicky-phase-bar[data-phase="think"] .clicky-phase-label {
+body.kaskade-board .kaskade-ui-phase-bar .kaskade-ui-phase-label,
+body.kaskade-board .kaskade-ui-phase-bar[data-phase="working"] .kaskade-ui-phase-label,
+body.kaskade-board .kaskade-ui-phase-bar[data-phase="think"] .kaskade-ui-phase-label {
   color: var(--kaskade-cyan);
 }
 
-body.kaskade-board .clicky-phase-bar[data-phase="success"] .clicky-phase-label {
+body.kaskade-board .kaskade-ui-phase-bar[data-phase="success"] .kaskade-ui-phase-label {
   color: var(--kaskade-green);
 }
 
-body.kaskade-board .clicky-phase-bar[data-phase="error"] .clicky-phase-label {
+body.kaskade-board .kaskade-ui-phase-bar[data-phase="error"] .kaskade-ui-phase-label {
   color: var(--kaskade-red);
 }
 
-body.kaskade-board .clicky-waveform span,
-body.kaskade-board .clicky-dots span {
+body.kaskade-board .kaskade-ui-waveform span,
+body.kaskade-board .kaskade-ui-dots span {
   background: var(--kaskade-cyan);
 }
 
-body.kaskade-board .clicky-toast {
+body.kaskade-board .kaskade-ui-toast {
   background: var(--kaskade-bg-panel-deep);
   border-color: var(--kaskade-border);
   color: var(--kaskade-ink);
 }
 
-body.kaskade-board .clicky-toast.success { border-color: rgba(157, 199, 109, 0.45); }
-body.kaskade-board .clicky-toast.error { border-color: rgba(255, 138, 138, 0.5); }
-body.kaskade-board .clicky-toast.info { border-color: var(--kaskade-cyan-45); }
+body.kaskade-board .kaskade-ui-toast.success { border-color: rgba(157, 199, 109, 0.45); }
+body.kaskade-board .kaskade-ui-toast.error { border-color: rgba(255, 138, 138, 0.5); }
+body.kaskade-board .kaskade-ui-toast.info { border-color: var(--kaskade-cyan-45); }
 
-body.kaskade-board .clicky-progress-hairline {
+body.kaskade-board .kaskade-ui-progress-hairline {
   background: var(--kaskade-gradient-progress);
   box-shadow: 0 0 12px var(--kaskade-cyan-45);
 }
 
-body.kaskade-board .clicky-scroll-tick {
+body.kaskade-board .kaskade-ui-scroll-tick {
   box-shadow: inset 0 0 0 1px var(--kaskade-cyan-35);
 }
 
-body.kaskade-board .clicky-scroll-snap-active {
+body.kaskade-board .kaskade-ui-scroll-snap-active {
   outline-color: var(--kaskade-cyan-45);
   background-color: var(--kaskade-cyan-08);
 }

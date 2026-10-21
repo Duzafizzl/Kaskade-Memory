@@ -1,3 +1,7 @@
+# File: .gitignore
+# Description: Keep venv, secrets, local review notes and build junk out of the public tree.
+# Created: 2026-08-28
+# Last updated: 2026-10-21
 .venv/
 __pycache__/
 *.pyc
@@ -7,3 +11,7 @@ data/*.db
 *.egg-info/
 dist/
 build/
+# Maintainer-only notes (reviews, publish audits). Never ship.
+drafts/
+tmp/
+logs/

@@ -3,7 +3,7 @@
 postgres_store.py – Minimal Postgres memory + graph store for Kaskade Memory OSS.
 
 Created: 2026-08-28
-Last updated: 2026-08-28
+Last updated: 2026-10-20
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from typing import Any, Dict, Generator, List, Optional
 import psycopg
 from psycopg.rows import dict_row
 
+from kaskade.cascade.envelope import stamp_archival_metadata
 from kaskade.erip.weighting import ERIPScores, merge_erip_tags, parse_mandatory_erip_from_content
 
 logger = logging.getLogger(__name__)
@@ -51,8 +52,7 @@ def insert_archival(
     tags: Optional[List[str]] = None,
 ) -> str:
     mid = str(uuid.uuid4())
-    meta = dict(metadata or {})
-    meta["person_id"] = person_id
+    meta = stamp_archival_metadata(metadata, person_id=person_id)
     erip = parse_mandatory_erip_from_content(content)
     if erip:
         meta["erip"] = erip.to_dict()
@@ -93,13 +93,44 @@ def insert_core_block(
     return mid
 
 
+def _coerce_json_obj(value: Any) -> Dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def _archival_row_to_ui(row: Dict[str, Any]) -> Dict[str, Any]:
+    meta = _coerce_json_obj(row.get("metadata"))
+    content = str(row.get("content") or "")
+    return {
+        "memory_id": str(row["id"]),
+        "content": content,
+        "content_preview": content[:200],
+        "l1": meta.get("recall_inject_l1") or content[:120],
+        "metadata": meta,
+        "tags": row.get("tags") or [],
+    }
+
+
 def list_cascade_days(conn: psycopg.Connection, *, limit: int = 60) -> List[Dict[str, Any]]:
     rows = conn.execute(
         """
-        SELECT DISTINCT metadata->>'episode_date' AS day_id, COUNT(*) AS archival_count
+        SELECT
+            metadata->>'episode_date' AS day_id,
+            COUNT(*)::int AS archival_count,
+            COUNT(DISTINCT NULLIF(metadata->>'theme_id', ''))::int AS theme_count,
+            ('day_' || (metadata->>'episode_date')) AS node_id
         FROM memories
         WHERE memory_type = 'archival' AND metadata ? 'episode_date'
-        GROUP BY 1 ORDER BY 1 DESC LIMIT %s
+        GROUP BY 1
+        ORDER BY 1 DESC
+        LIMIT %s
         """,
         (limit,),
     ).fetchall()
@@ -115,18 +146,70 @@ def get_day_bundle(conn: psycopg.Connection, day_id: str) -> Dict[str, Any]:
         """,
         (day_id,),
     ).fetchall()
-    themes = conn.execute(
-        """
-        SELECT DISTINCT metadata->>'theme_id' AS theme_id FROM memories
-        WHERE memory_type = 'archival' AND metadata->>'episode_date' = %s AND metadata ? 'theme_id'
-        """,
-        (day_id,),
-    ).fetchall()
+    archivals_ui = [_archival_row_to_ui(dict(r)) for r in archivals]
+    theme_map: Dict[str, List[Dict[str, Any]]] = {}
+    for archival in archivals_ui:
+        theme_id = str((archival.get("metadata") or {}).get("theme_id") or "untagged")
+        theme_map.setdefault(theme_id, []).append(archival)
+    themes = [
+        {"theme_id": theme_id, "id": theme_id, "archivals": items}
+        for theme_id, items in sorted(theme_map.items())
+    ]
     return {
         "day_id": day_id,
-        "archivals": [dict(r) for r in archivals],
-        "themes": [r["theme_id"] for r in themes if r.get("theme_id")],
+        "archivals": archivals_ui,
+        "themes": themes,
     }
+
+
+def get_archival_memory(conn: psycopg.Connection, memory_id: str) -> Optional[Dict[str, Any]]:
+    row = conn.execute(
+        """
+        SELECT id, content, metadata, tags, created_at
+        FROM memories
+        WHERE id = %s AND memory_type = 'archival'
+        """,
+        (memory_id,),
+    ).fetchone()
+    if not row:
+        return None
+    payload = _archival_row_to_ui(dict(row))
+    payload["created_at"] = row.get("created_at")
+    return payload
+
+
+def suggest_themes(conn: psycopg.Connection, *, q: str = "", limit: int = 12) -> List[Dict[str, Any]]:
+    pattern = f"%{q.strip().lower()}%" if q.strip() else "%"
+    rows = conn.execute(
+        """
+        SELECT DISTINCT metadata->>'theme_id' AS theme_id
+        FROM memories
+        WHERE memory_type = 'archival'
+          AND metadata ? 'theme_id'
+          AND LOWER(metadata->>'theme_id') LIKE %s
+        ORDER BY 1
+        LIMIT %s
+        """,
+        (pattern, limit),
+    ).fetchall()
+    return [{"theme_id": r["theme_id"]} for r in rows if r.get("theme_id")]
+
+
+def suggest_persons(conn: psycopg.Connection, *, q: str = "", limit: int = 12) -> List[Dict[str, Any]]:
+    pattern = f"%{q.strip().lower()}%" if q.strip() else "%"
+    rows = conn.execute(
+        """
+        SELECT DISTINCT metadata->>'person_id' AS person_id
+        FROM memories
+        WHERE memory_type = 'archival'
+          AND metadata ? 'person_id'
+          AND LOWER(metadata->>'person_id') LIKE %s
+        ORDER BY 1
+        LIMIT %s
+        """,
+        (pattern, limit),
+    ).fetchall()
+    return [{"person_id": r["person_id"]} for r in rows if r.get("person_id")]
 
 
 def add_graph_edge(conn: psycopg.Connection, *, src: str, dst: str, edge_type: str) -> None:
@@ -159,3 +242,19 @@ def insert_spark_audit(
     )
     conn.commit()
     return aid
+
+
+def list_spark_audits_for_day(conn: psycopg.Connection, day_id: str) -> List[Dict[str, Any]]:
+    """Read-only: Spark audit rows created on `day_id` (UTC date). Omits spark_text by design."""
+    rows = conn.execute(
+        """
+        SELECT id::text AS id, agent_id, extra, created_at
+        FROM recall_gnostic_shadow_audit
+        WHERE (created_at AT TIME ZONE 'UTC')::date = %s::date
+        ORDER BY created_at ASC, id ASC
+        """,
+        (day_id,),
+    ).fetchall()
+    out = [{**dict(r), "extra": _coerce_json_obj(r.get("extra"))} for r in rows]
+    logger.debug(json.dumps({"level": "DEBUG", "message": "spark_audits_listed", "day_id": day_id, "rows_n": len(out)}))
+    return out

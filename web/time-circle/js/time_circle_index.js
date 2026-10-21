@@ -1,7 +1,7 @@
 /**
- * time_circle_index.js – Trading-style Index, Label-Kollision, Index-Dashboard.
+ * time_circle_index.js – Trading-style index, label collision, index dashboard.
  * Created: 2026-06-30
- * Last updated: 2026-06-30
+ * Last updated: 2026-10-21
  */
 (function (root) {
   "use strict";
@@ -62,7 +62,7 @@
 
   function metaLineForEvent(ev, zoomLevel) {
     if (!ev) return "";
-    if (zoomLevel === "month") return (ev.dayCount || 0) + " tage · " + (ev.themeCount || 0) + " themes";
+    if (zoomLevel === "month") return (ev.dayCount || 0) + " days · " + (ev.themeCount || 0) + " themes";
     if (zoomLevel === "hour") return (ev.eventCount || 0) + " enrich";
     if (zoomLevel === "day") {
       var tc = ev.themeCount != null ? ev.themeCount : 0;
@@ -433,19 +433,19 @@
     container.innerHTML =
       '<header class="idx-dash-head">' +
       '<span class="idx-dash-badge">INDEX DASHBOARD</span>' +
-      '<button type="button" class="idx-dash-close" aria-label="Schließen">×</button>' +
+      '<button type="button" class="idx-dash-close" aria-label="Close">×</button>' +
       "</header>" +
       '<div class="idx-dash-body">' +
-      '<div class="idx-dash-row idx-dash-time"><span>ZEIT</span><strong>' + escapeHtml(timeLbl) + "</strong></div>" +
+      '<div class="idx-dash-row idx-dash-time"><span>TIME</span><strong>' + escapeHtml(timeLbl) + "</strong></div>" +
       '<div class="idx-dash-row idx-dash-idx"><span>IDX</span><strong class="idx-dash-value">' + escapeHtml(formatIndexLabel(val)) + "</strong></div>" +
       '<div class="idx-dash-row"><span>META</span><strong>' + escapeHtml(meta || "—") + "</strong></div>" +
       '<div class="idx-dash-row"><span>TREND</span><strong>' + escapeHtml(trend) + "</strong></div>" +
       '<div class="idx-dash-row idx-dash-coords"><span>2D</span><strong>' +
       escapeHtml(coord.x.toFixed(1) + " · " + coord.y.toFixed(1)) + " · " + coord.angleDeg.toFixed(1) + "°</strong></div>" +
-      (ev.dayId ? '<div class="idx-dash-row"><span>TAG</span><strong>' + escapeHtml(ev.dayId) + "</strong></div>" : "") +
+      (ev.dayId ? '<div class="idx-dash-row"><span>DAY</span><strong>' + escapeHtml(ev.dayId) + "</strong></div>" : "") +
       "</div>" +
       '<footer class="idx-dash-foot">' +
-      '<button type="button" class="idx-dash-detail">↳ Themes / Archivals öffnen</button>' +
+      '<button type="button" class="idx-dash-detail">↳ Open themes / archivals</button>' +
       "</footer>";
 
     container.hidden = false;
@@ -597,7 +597,7 @@
       var timeLbl = timeLabelForEvent(ev, zoomLevel);
 
       readoutEl.innerHTML =
-        '<span class="tc-2d-axis tc-2d-time">ZEIT · ' + timeLbl + "</span>" +
+        '<span class="tc-2d-axis tc-2d-time">TIME · ' + timeLbl + "</span>" +
         '<span class="tc-2d-axis tc-2d-index">IDX · ' + formatIndexLabel(val) + "</span>" +
         '<span class="tc-2d-meta">' + (ev && ev.copy ? String(ev.copy).slice(0, 64) : "") + "</span>";
       positionFloatingReadout(readoutEl, clientX, clientY);
@@ -610,7 +610,7 @@
         crosshairEl.hidden = false;
         crosshairEl.style.left = lx + "px";
         crosshairEl.style.top = ly + "px";
-        crosshairEl.setAttribute("aria-label", "Zeit " + timeLbl + ", Index " + formatIndexLabel(val));
+        crosshairEl.setAttribute("aria-label", "Time " + timeLbl + ", index " + formatIndexLabel(val));
       }
 
       return { index: idx, value: val, timeLabel: timeLbl };
