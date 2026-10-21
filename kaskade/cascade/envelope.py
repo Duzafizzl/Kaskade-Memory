@@ -3,7 +3,7 @@
 cascade_envelope.py – Archival envelope validation and temporal stamping for cascade pipeline.
 
 Created: 2026-06-15
-Last updated: 2026-08-24
+Last updated: 2026-10-20
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ def _person_id_aliases() -> Dict[str, str]:
         return {"assistant": "agent", "user": "alex"}
 
 
-# Discord handles / mining nicknames → canonical archival person_id (siehe person_aliases.yaml)
+# Chat handles / nicknames -> canonical archival person_id (see config/person_aliases.yaml)
 PERSON_ID_ALIASES: Dict[str, str] = _person_id_aliases()
 
 

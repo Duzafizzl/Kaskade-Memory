@@ -3,7 +3,7 @@
 signals.py – Signal fetcher registry + demo plugins for EOD.
 
 Created: 2026-08-28
-Last updated: 2026-08-28
+Last updated: 2026-10-20
 """
 
 from __future__ import annotations
@@ -43,16 +43,7 @@ def demo_heartbeat_day(day_id: str, agent_id: str = "") -> Dict[str, Any]:
     }
 
 
-def spark_day_summary(day_id: str, agent_id: str = "") -> Dict[str, Any]:
-    return {
-        "layer": "spark",
-        "theme_id": "spark_day",
-        "container_hint": "signal:spark",
-        "has_data": True,
-        "gist": f"Spark audits for {day_id}",
-        "sparks_n": 2,
-        "convergent_rate": 0.5,
-    }
+from kaskade.gnostic.cascade_day_summary import spark_day_summary
 
 
 _REGISTRY: Dict[str, Callable[..., Dict[str, Any]]] = {

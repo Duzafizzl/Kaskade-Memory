@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-  <!-- File: cascade_time_circle.html | Kaska Time Circle — Scroll-Rad mit Kaskade/MMA-Daten. Created: 2026-06-28. Last updated: 2026-06-30 (ring geometry legacy aliases fix) -->
+  <!-- File: time-circle/index.html | Kaskade Memory Time Circle — scroll wheel over cascade days. Created: 2026-06-28. Last updated: 2026-10-21 -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kaskade Memory · Time Circle</title>
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/stream/css/kaskade_design_tokens.css?v=20260630tc2">
+  <link rel="stylesheet" href="./css/kaska_design_tokens.css?v=20261021">
   <style>
     :root {
       /* Runtime state — JS updates via setProperty */
@@ -494,7 +494,7 @@
       box-shadow: 0 28px 90px rgba(0,0,0,.82), 0 0 0 9999px rgba(0,0,0,.12);
     }
     .inline-tree:not(:empty)::before {
-      content: "KASKA · MEMORY-KASKADE";
+      content: "KASKADE MEMORY";
       display: block;
       margin-bottom: 14px;
       color: rgba(255,255,255,.72);
@@ -610,7 +610,7 @@
     }
 
     .inline-tree.graph-explorer-open::before {
-      content: "KASKA · GRAPH-NAVIGATION";
+      content: "KASKADE MEMORY · GRAPH";
     }
     .graph-explorer { position: relative; }
     .graph-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -1141,7 +1141,7 @@
     }
     .tree-branch-clickable:hover { background: rgba(255,255,255,.14); }
     .tree-branch-clickable::after {
-      content: "↳ graph öffnen";
+      content: "↳ open graph";
       display: block;
       margin-top: 6px;
       font-size: 9px;
@@ -1153,7 +1153,7 @@
     }
 
     .inline-tree.hour-panel-open::before {
-      content: "KASKA · MMA STUNDE";
+      content: "KASKADE MEMORY · MMA HOUR";
     }
     .hour-person-filters {
       margin-top: 6px;
@@ -1669,50 +1669,6 @@
       border-color: rgba(65,220,225,.55);
       background: rgba(65,220,225,.12);
     }
-    .source-nav button.source-sound-btn {
-      border: 1px solid rgba(255,255,255,.18);
-      background: transparent;
-      color: rgba(255,255,255,.72);
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      padding: 6px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-    .source-nav button.source-sound-btn:hover {
-      border-color: rgba(65,220,225,.55);
-      color: #fff;
-      background: rgba(65,220,225,.12);
-    }
-    .tc-sound-fab {
-      position: fixed;
-      z-index: 200;
-      right: 22px;
-      bottom: calc(200px + env(safe-area-inset-bottom, 0px));
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      border: 2px solid rgba(65, 220, 225, 0.55);
-      background: rgba(18, 16, 17, 0.96);
-      color: #fff;
-      font-size: 1.4rem;
-      line-height: 1;
-      cursor: pointer;
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
-      pointer-events: auto;
-      touch-action: manipulation;
-    }
-    .tc-sound-fab:hover, .tc-sound-fab:focus-visible {
-      border-color: #41dce1;
-      outline: none;
-      transform: scale(1.04);
-    }
-    .zoom-bar .tc-sound-toggle {
-      min-height: 40px;
-      min-width: 44px;
-      font-size: 11px;
-    }
     .boot-overlay {
       position: fixed;
       inset: 0;
@@ -1825,12 +1781,6 @@
         bottom: calc(78px + env(safe-area-inset-bottom, 0px));
         max-width: none;
       }
-      .tc-sound-fab {
-        bottom: calc(248px + env(safe-area-inset-bottom, 0px));
-        right: 18px;
-        width: 56px;
-        height: 56px;
-      }
       .source-nav { top: auto; bottom: calc(138px + env(safe-area-inset-bottom, 0px)); right: 18px; left: auto; z-index: 120; }
       .bloomberg-bar { top: 18px; right: 18px; left: auto; bottom: auto; width: auto; }
       .bb-modal { width: calc(100vw - 20px); max-height: calc(100dvh - 32px); padding: 12px; }
@@ -1870,43 +1820,36 @@
       .inline-tree:not(:empty) ~ .mobile-scroll-scrub { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/stream/css/clicky_ui.css">
-  <script src="/stream/js/clicky_ui.js?v=20260630b"></script>
 </head>
 <body>
-  <div class="bloomberg-bar" id="bloombergBar" aria-label="Bloomberg-Terminal Trigger"></div>
-  <nav class="source-nav" aria-label="Datenquelle">
-    <a href="?source=cascade" id="navCascade">Kaskade</a>
-    <a href="?source=mma&window=last_30d" id="navMma">MMA</a>
-    <a href="/stream/cascade/spiral" target="_blank" rel="noopener">3D Spirale</a>
-    <button type="button" class="source-sound-btn tc-sound-toggle" id="tcSoundToggle" title="UI-Sounds — Klick = Test, Rechtsklick = stumm">🔊</button>
+  <div class="bloomberg-bar" id="bloombergBar" aria-label="Index terminal trigger"></div>
+  <nav class="source-nav" aria-label="Data source">
+    <a href="?source=cascade" id="navCascade">Cascade</a>
   </nav>
-  <button type="button" class="tc-sound-fab tc-sound-toggle" id="tcSoundFab" title="Sounds an — tippen" aria-label="UI-Sounds">🔊</button>
   <div class="boot-overlay" id="bootOverlay">
-    <div id="bootText">Kaskade wird geladen…</div>
+    <div id="bootText">Loading Kaskade Memory…</div>
   </div>
   <header class="title">
     <p>Time Circle</p>
-    <h1>Kaska<br>Memory</h1>
-    <small id="titleHint">Daten sitzen im dunklen Reifen — Schrift im Segment, Balken außen. Innenring: Phasen von–bis (Monat/Woche), im Fokus wie Herzschlag größer.</small>
+    <h1>Kaskade<br>Memory</h1>
+    <small id="titleHint">Labels sit in the dark ring. Bars sit outside. The inner ring shows month or week phases and grows on the focused slice.</small>
   </header>
   <div class="readout" aria-live="polite">
     <strong id="year">2019</strong>
-    <span id="phase" class="phase-readout">JAN · KW 01 — phasenring innen</span>
-    <span id="copy">linie 01 / anker / erinnerungs spur — scroll-fokus hält den reifen still.</span>
+    <span id="phase" class="phase-readout">JAN · W 01 — inner phase ring</span>
+    <span id="copy">line 01 / anchor / memory track — scroll focus holds the ring still.</span>
     <div class="cascade-filter-bar" id="cascadeFilterBar" hidden>
-      <input type="search" id="tcThemeInput" data-filter="theme" placeholder="Theme filtern…" autocomplete="off" />
-      <input type="search" id="tcPersonInput" data-filter="person" placeholder="Person filtern…" autocomplete="off" />
+      <input type="search" id="tcThemeInput" data-filter="theme" placeholder="Filter theme…" autocomplete="off" />
+      <input type="search" id="tcPersonInput" data-filter="person" placeholder="Filter person…" autocomplete="off" />
       <div class="filter-drop" id="tcFilterDrop" hidden></div>
       <span class="filter-active" id="tcFilterActive" hidden></span>
     </div>
   </div>
   <div class="progress"></div>
-  <div class="zoom-bar" aria-label="Zoom-Ebenen">
-    <span class="zoom-crumb" id="zoomCrumb">monate</span>
-    <button type="button" class="tc-sound-toggle" id="tcSoundZoom" title="Sounds">🔊</button>
-    <button type="button" id="btnZoomOut" disabled title="Eine Ebene zurück">← zurück</button>
-    <button type="button" id="btnZoomIn" title="In fokussiertes Segment zoomen">↳ reinzoomen</button>
+  <div class="zoom-bar" aria-label="Zoom levels">
+    <span class="zoom-crumb" id="zoomCrumb">months</span>
+    <button type="button" id="btnZoomOut" disabled title="One level back">← back</button>
+    <button type="button" id="btnZoomIn" title="Zoom into the focused segment">↳ zoom in</button>
   </div>
   <div class="focus-vignette" aria-hidden="true"></div>
 
@@ -1931,7 +1874,7 @@
       <div class="bands" id="bands"></div>
       <div class="bars" id="bars"></div>
       <svg class="index-overlay" id="indexOverlay" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
-      <svg class="index-perimeter-hit-layer" id="indexPerimeterHit" viewBox="0 0 1000 1000" aria-label="Index-Perimeter — Klick für 2D-Koordinaten"></svg>
+      <svg class="index-perimeter-hit-layer" id="indexPerimeterHit" viewBox="0 0 1000 1000" aria-label="Index perimeter. Click for 2D coordinates."></svg>
       <div class="dots" id="dots"></div>
       <div class="focus-beam-wrap" aria-hidden="true"><div class="focus-beam"></div></div>
     </section>
@@ -1940,24 +1883,24 @@
   <aside class="index-dashboard" id="indexDashboard" hidden aria-label="Index Dashboard"></aside>
   <div class="inline-tree" id="inlineTree" aria-hidden="true"></div>
   <div id="scrollSnapTrack" class="scroll-snap-track" aria-hidden="true"></div>
-  <nav class="mobile-scroll-scrub" id="mobileScrollScrub" aria-label="Zeitnavigation">
-    <button type="button" id="scrubPrev" title="Vorheriges Segment">‹</button>
-    <input type="range" id="scrubRange" min="0" max="0" value="0" aria-label="Segment wählen" />
-    <button type="button" id="scrubNext" title="Nächstes Segment">›</button>
+  <nav class="mobile-scroll-scrub" id="mobileScrollScrub" aria-label="Time navigation">
+    <button type="button" id="scrubPrev" title="Previous segment">‹</button>
+    <input type="range" id="scrubRange" min="0" max="0" value="0" aria-label="Choose segment" />
+    <button type="button" id="scrubNext" title="Next segment">›</button>
     <span class="mobile-scroll-scrub-label" id="scrubLabel">—</span>
   </nav>
 
   <script>
   (function loadAndRun() {
-    var isLocal = location.port === '8777' || location.pathname.indexOf('zeitspirale-scroll') >= 0;
-    var dataSrc = isLocal ? 'time_circle_data.js' : '/stream/js/time_circle_data.js?v=20260630h';
-    var proseSrc = isLocal ? 'archive_prose_render.js' : '/stream/js/archive_prose_render.js';
-    var graphSrc = isLocal ? 'time_circle_graph_nav.js' : '/stream/js/time_circle_graph_nav.js?v=20260630h';
-    var hourSrc = isLocal ? 'time_circle_hour_panel.js' : '/stream/js/time_circle_hour_panel.js';
-    var indexSrc = isLocal ? 'time_circle_index.js' : '/stream/js/time_circle_index.js?v=20260630d';
-    var newsBoardSrc = isLocal ? 'time_circle_news_board.js' : '/stream/js/time_circle_news_board.js?v=20260630d';
-    var chartsSrc = isLocal ? 'time_circle_bloomberg_charts.js' : '/stream/js/time_circle_bloomberg_charts.js?v=20260630f';
-    var bloombergSrc = isLocal ? 'time_circle_bloomberg.js' : '/stream/js/time_circle_bloomberg.js?v=20260630f';
+    var useRelative = location.pathname.indexOf('/time-circle') >= 0 || location.port === '8777' || location.port === '8080';
+    var base = useRelative ? 'js/' : '/stream/js/';
+    var chain = [
+      'time_circle_data.js',
+      'archive_prose_render.js',
+      'time_circle_graph_nav.js',
+      'time_circle_hour_panel.js',
+      'time_circle_index.js'
+    ];
 
     function loadScript(src, onOk, onErr) {
       var el = document.createElement('script');
@@ -1967,75 +1910,45 @@
       document.head.appendChild(el);
     }
 
-    loadScript(dataSrc, function () {
-      loadScript(proseSrc, function () {
-        loadScript(graphSrc, function () {
-          loadScript(hourSrc, function () {
-            loadScript(indexSrc, function () {
-              loadScript(newsBoardSrc, function () {
-                loadScript(chartsSrc, function () {
-                  loadScript(bloombergSrc, runApp, function () {
-                    document.getElementById('bootText').innerHTML =
-                      '<div class="err">Script samht geladen: ' + bloombergSrc + '</div>';
-                  });
-                }, function () {
-                  document.getElementById('bootText').innerHTML =
-                    '<div class="err">Script samht geladen: ' + chartsSrc + '</div>';
-                });
-              }, function () {
-                document.getElementById('bootText').innerHTML =
-                  '<div class="err">Script samht geladen: ' + newsBoardSrc + '</div>';
-              });
-            }, function () {
-              document.getElementById('bootText').innerHTML =
-                '<div class="err">Script samht geladen: ' + indexSrc + '</div>';
-            });
-          }, function () {
-            document.getElementById('bootText').innerHTML =
-              '<div class="err">Script samht geladen: ' + hourSrc + '</div>';
-          });
-        }, function () {
-          document.getElementById('bootText').innerHTML =
-            '<div class="err">Script samht geladen: ' + graphSrc + '</div>';
-        });
-      }, function () {
+    function loadNext(i) {
+      if (i >= chain.length) {
+        window.TimeCircleNewsBoard = window.TimeCircleNewsBoard || {
+          mount: function () { return { refresh: function () {} }; }
+        };
+        window.TimeCircleBloomberg = window.TimeCircleBloomberg || {
+          mount: function () { return { update: function () {}, refresh: function () {} }; }
+        };
+        runApp();
+        return;
+      }
+      var src = base + chain[i] + '?v=20261021';
+      loadScript(src, function () { loadNext(i + 1); }, function () {
         document.getElementById('bootText').innerHTML =
-          '<div class="err">Script samht geladen: ' + proseSrc + '</div>';
+          '<div class="err">Failed to load script: ' + src + '</div>';
       });
-    }, function () {
-      document.getElementById('bootText').innerHTML =
-        '<div class="err">Script samht geladen: ' + dataSrc + '</div>';
-    });
+    }
+
+    loadNext(0);
 
     function runApp() {
     if (!window.TimeCircleData) {
       document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleData fehlt nach ' + dataSrc + '</div>';
+        '<div class="err">TimeCircleData missing after script load</div>';
       return;
     }
     if (!window.TimeCircleGraphNav) {
       document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleGraphNav fehlt nach ' + graphSrc + '</div>';
+        '<div class="err">TimeCircleGraphNav missing after script load</div>';
       return;
     }
     if (!window.TimeCircleHourPanel) {
       document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleHourPanel fehlt nach ' + hourSrc + '</div>';
+        '<div class="err">TimeCircleHourPanel missing after script load</div>';
       return;
     }
     if (!window.TimeCircleIndex) {
       document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleIndex fehlt nach ' + indexSrc + '</div>';
-      return;
-    }
-    if (!window.TimeCircleNewsBoard) {
-      document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleNewsBoard fehlt nach ' + newsBoardSrc + '</div>';
-      return;
-    }
-    if (!window.TimeCircleBloomberg) {
-      document.getElementById('bootText').innerHTML =
-        '<div class="err">TimeCircleBloomberg fehlt nach ' + bloombergSrc + '</div>';
+        '<div class="err">TimeCircleIndex missing after script load</div>';
       return;
     }
     const root = document.documentElement;
@@ -2071,121 +1984,8 @@
     const btnZoomIn = document.querySelector('#btnZoomIn');
     const btnZoomOut = document.querySelector('#btnZoomOut');
     const wheelEl = document.querySelector('.wheel');
-    const TC_SOUND_BASE = '/stream/sounds/ui/';
-    const TC_SOUND_FILES = {
-      tick: 'navigation.mp3',
-      send: 'navigation_enter.mp3',
-      back: 'navigation_back.mp3',
-      receive: 'prompt.mp3',
-      done: 'prompt_enter.mp3',
-      error: 'prompt_back.mp3',
-    };
-    let tcAudioCtx = null;
-    let tcBuffers = {};
-    let tcSoundsReady = false;
-    let tcSoundsMuted = false;
-    let lastTcTickAt = 0;
-
-    function tcSetSoundStatus(msg) {
-      if (copy) copy.textContent = msg;
-    }
-
-    async function tcUnlockSounds() {
-      tcAudioCtx = tcAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (tcAudioCtx.state === 'suspended') await tcAudioCtx.resume();
-      const keys = Object.keys(TC_SOUND_FILES);
-      for (let ki = 0; ki < keys.length; ki++) {
-        const key = keys[ki];
-        const file = TC_SOUND_FILES[key];
-        if (tcBuffers[key]) continue;
-        const res = await fetch(TC_SOUND_BASE + file);
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + file);
-        tcBuffers[key] = await tcAudioCtx.decodeAudioData(await res.arrayBuffer());
-      }
-      tcSoundsReady = true;
-      return true;
-    }
-
-    function tcPlayBuffer(key) {
-      if (tcSoundsMuted || !tcSoundsReady || !tcBuffers[key] || !tcAudioCtx) return false;
-      try {
-        const src = tcAudioCtx.createBufferSource();
-        const g = tcAudioCtx.createGain();
-        g.gain.value = 0.8;
-        src.buffer = tcBuffers[key];
-        src.connect(g);
-        g.connect(tcAudioCtx.destination);
-        src.start(0);
-        return true;
-      } catch (err) {
-        TimeCircleData.log('WARN', 'tc_play_buffer_failed', { key: key, error: String(err) });
-        return false;
-      }
-    }
-
-    function tcPlayHtml(key) {
-      const file = TC_SOUND_FILES[key];
-      if (!file || tcSoundsMuted) return;
-      const a = new Audio(TC_SOUND_BASE + file);
-      a.volume = 0.8;
-      a.play().catch((err) => {
-        TimeCircleData.log('WARN', 'tc_play_html_failed', { key: key, error: String(err) });
-      });
-    }
-
-    function uiSound(key) {
-      if (tcSoundsMuted) return;
-      if (!tcPlayBuffer(key)) tcPlayHtml(key);
-    }
-
-    function maybeScrollSnapSound() {
-      if (tcSoundsMuted || !tcSoundsReady) return;
-      const now = Date.now();
-      if (now - lastTcTickAt < 90) return;
-      lastTcTickAt = now;
-      tcPlayBuffer('tick');
-    }
-
-    function tcSyncSoundButtons() {
-      const label = tcSoundsMuted ? '🔇' : '🔊';
-      document.querySelectorAll('.tc-sound-toggle').forEach((btn) => {
-        btn.textContent = label;
-      });
-    }
-
-    if (document.querySelectorAll('.tc-sound-toggle').length) {
-      try {
-        if (localStorage.getItem('tc_sounds_muted') === '1') {
-          tcSoundsMuted = true;
-          tcSyncSoundButtons();
-        }
-      } catch (e) { /* ignore */ }
-      document.querySelectorAll('.tc-sound-toggle').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          tcSoundsMuted = false;
-          tcSyncSoundButtons();
-          try { localStorage.removeItem('tc_sounds_muted'); } catch (err) { /* ignore */ }
-          try {
-            await tcUnlockSounds();
-            tcPlayBuffer('send');
-            tcSetSoundStatus('🔊 Sounds aktiv — scroll oder ↳ reinzoomen');
-          } catch (err) {
-            tcPlayHtml('send');
-            tcSetSoundStatus('Sound HTML-Fallback: ' + err.message);
-          }
-        });
-        btn.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          tcSoundsMuted = true;
-          tcSoundsReady = false;
-          tcSyncSoundButtons();
-          try { localStorage.setItem('tc_sounds_muted', '1'); } catch (err) { /* ignore */ }
-          tcSetSoundStatus('Sounds aus — 🔊 klicken zum An');
-        });
-      });
-    }
+    function uiSound(_key) {}
+    function maybeScrollSnapSound() {}
 
     const cascadeFilterBar = document.querySelector('#cascadeFilterBar');
     const tcThemeInput = document.querySelector('#tcThemeInput');
@@ -2222,12 +2022,12 @@
       tcFilterDrop.innerHTML = items.map(item => {
         if (kind === 'person') {
           const pid = String(item.person_id || '').toLowerCase();
-          const meta = (item.archival_count || 0) + ' arch · ' + (item.day_count || 0) + ' tage';
+          const meta = (item.archival_count || 0) + ' arch · ' + (item.day_count || 0) + ' days';
           return '<button type="button" data-kind="person" data-id="' + pid + '">' + (item.label || pid) +
             '<small style="display:block;color:rgba(255,255,255,.45)">' + meta + '</small></button>';
         }
         const tid = String(item.theme_id || '').replace(/^theme_/, '');
-        const meta = (item.day_count || 0) + ' tage · ' + (item.archival_count || 0) + ' arch';
+        const meta = (item.day_count || 0) + ' days · ' + (item.archival_count || 0) + ' arch';
         return '<button type="button" data-kind="theme" data-id="' + tid + '">' + tid +
           '<small style="display:block;color:rgba(255,255,255,.45)">' + meta + '</small></button>';
       }).join('');
@@ -2397,7 +2197,7 @@
 
     function setBoot(on, msg, isErr) {
       bootOverlay.classList.toggle('hidden', !on);
-      bootText.innerHTML = isErr ? `<div class="err">${msg || 'Fehler'}</div>` : (msg || 'Lade…');
+      bootText.innerHTML = isErr ? `<div class="err">${msg || 'Error'}</div>` : (msg || 'Loading…');
     }
 
     function refreshIndexOverlay(active) {
@@ -2481,7 +2281,7 @@
       if (zoom.level === 'hour' && e) return (e.hourLabel || '—') + ' · ' + (zoom.dayId || '');
       if (zoom.level === 'day' && e?.dayId) {
         const p = phaseDefs.find(pd => i >= pd.start && i <= pd.end);
-        return TimeCircleData.formatDayLabel(e.dayId, 'iso') + ' · ' + (p?.label || ('KW ' + String(weekIndex(i)).padStart(2, '0')));
+        return TimeCircleData.formatDayLabel(e.dayId, 'iso') + ' · ' + (p?.label || ('W ' + String(weekIndex(i)).padStart(2, '0')));
       }
       const p = phaseDefs.find(pd => i >= pd.start && i <= pd.end);
       if (!p) return zoomLevelLabel();
@@ -2510,16 +2310,16 @@
     }
 
     function zoomLevelLabel() {
-      if (zoom.level === 'hour') return 'stunden · ' + (zoom.dayId || '');
-      if (zoom.level === 'day') return 'tage · ' + (zoom.monthKey || '');
-      return 'monate';
+      if (zoom.level === 'hour') return 'hours · ' + (zoom.dayId || '');
+      if (zoom.level === 'day') return 'days · ' + (zoom.monthKey || '');
+      return 'months';
     }
 
     function updateZoomUi() {
       zoomCrumb.textContent = zoomLevelLabel();
       btnZoomOut.disabled = zoom.level === 'month';
       btnZoomIn.disabled = zoom.level === 'hour';
-      btnZoomIn.textContent = zoom.level === 'month' ? '↳ tage' : zoom.level === 'day' ? '↳ stunden' : '↳ max';
+      btnZoomIn.textContent = zoom.level === 'month' ? '↳ days' : zoom.level === 'day' ? '↳ hours' : '↳ max';
     }
 
     async function applyZoomView(opts) {
@@ -2544,7 +2344,7 @@
           networkLinks = TimeCircleData.buildThemeLinks(events, bundleCache);
         } else if (zoom.level === 'hour') {
           if (!hourCache[zoom.dayId]) {
-            setBoot(true, 'Stunden werden geladen…');
+            setBoot(true, 'Loading hours…');
             hourCache[zoom.dayId] = await TimeCircleData.loadHourBuckets(zoom.dayId);
           }
           events = hourCache[zoom.dayId];
@@ -2553,7 +2353,7 @@
           networkLinks = [];
         }
 
-        if (!events.length) throw new Error('Keine Segmente in dieser Zoom-Ebene');
+        if (!events.length) throw new Error('No segments at this zoom level');
 
         openedIndex = null;
         panelSuppressed = false;
@@ -2721,8 +2521,8 @@
 
       if (e.zoomLevel === 'month') {
         inlineTree.innerHTML = `<button type="button" class="tree-close" onclick="window.__closeTree()">×</button>
-          <div class="tree-path"><span><b>monat</b> ${e.title}</span></div>
-          <div class="tree-branch" style="--depth:0;--c:${c}"><span class="tree-level">Σ</span>${e.dayCount} tage · ${e.themeCount} themes<small>↳ reinzoomen für tages-ring</small></div>`;
+          <div class="tree-path"><span><b>month</b> ${e.title}</span></div>
+          <div class="tree-branch" style="--depth:0;--c:${c}"><span class="tree-level">Σ</span>${e.dayCount} days · ${e.themeCount} themes<small>↳ zoom in for the day ring</small></div>`;
         (e.childDayIds || []).forEach((did, depth) => {
           const div = document.createElement('div');
           div.className = 'tree-branch tree-branch-clickable tree-branch-zoom-day';
@@ -2749,17 +2549,17 @@
 
       inlineTree.innerHTML = `<button type="button" class="tree-close" onclick="window.__closeTree()">×</button>
         <div class="tree-path">
-          <span><b>${dataPack?.source === 'mma' ? 'MMA' : 'TAG'}</b> ${e.dayId || e.title}</span>
+          <span><b>${dataPack?.source === 'mma' ? 'MMA' : 'DAY'}</b> ${e.dayId || e.title}</span>
         </div>
         <div class="tree-branch" style="--depth:0;--c:${c}"><span class="tree-level">·</span><span class="tree-branch-content">${e.title}<small>${e.copy}</small></span></div>
-        <p style="color:rgba(255,255,255,.55);font:10px SFMono-Regular,Consolas,monospace;margin:8px 0 0">Lade Kaskade…</p>`;
+        <p style="color:rgba(255,255,255,.55);font:10px SFMono-Regular,Consolas,monospace;margin:8px 0 0">Loading Kaskade Memory…</p>`;
 
       if (dataPack?.source === 'mma') {
         const branches = (e.pairs || []).slice(0, 6).map((p, depth) => {
           const title = `${p.tag_a} × ${p.tag_b}`.replace(/_/g, ' ');
           return `<div class="tree-branch" style="--depth:${depth + 1};--c:${c}"><span class="tree-level">${depth + 2}</span>${title}<small>${p.count} co-events · ${e.dayId}</small></div>`;
         }).join('');
-        inlineTree.querySelector('.tree-path').insertAdjacentHTML('afterend', branches || '<div class="tree-branch" style="--depth:1;--c:' + c + '"><span class="tree-level">2</span>Keine Tag-Paare</div>');
+        inlineTree.querySelector('.tree-path').insertAdjacentHTML('afterend', branches || '<div class="tree-branch" style="--depth:1;--c:' + c + '"><span class="tree-level">2</span>No tag pairs</div>');
         inlineTree.querySelector('p')?.remove();
         return;
       }
@@ -2774,7 +2574,7 @@
           div.className = 'tree-branch tree-branch-clickable';
           div.style.cssText = `--depth:${depth};--c:${c}`;
           const themeId = String(t.theme_id || t.id || '').replace(/^theme_/, '');
-          div.innerHTML = `<span class="tree-level">${depth + 1}</span>${t.label}<small>${(t.archivals || []).length} archival(s) · theme öffnen</small>`;
+          div.innerHTML = `<span class="tree-level">${depth + 1}</span>${t.label}<small>${(t.archivals || []).length} archival(s) · open theme</small>`;
           div.addEventListener('click', () => {
             inlineTree.style.setProperty('--c', c);
             graphNav.wheelIndex = i;
@@ -2801,12 +2601,12 @@
           });
         });
         if (!(bundle.themes || []).length) {
-          inlineTree.insertAdjacentHTML('beforeend', `<div class="tree-branch" style="--depth:1;--c:${c}"><span class="tree-level">2</span>Keine Themes</div>`);
+          inlineTree.insertAdjacentHTML('beforeend', `<div class="tree-branch" style="--depth:1;--c:${c}"><span class="tree-level">2</span>No themes</div>`);
         }
       } catch (err) {
         if (gen !== treeRenderGen) return;
         const errEl = inlineTree.querySelector('p');
-        if (errEl) errEl.textContent = 'Fehler: ' + err.message;
+        if (errEl) errEl.textContent = 'Error: ' + err.message;
       }
     }
 
@@ -2890,7 +2690,7 @@
         const label = node(data, 'button', `--a:${a}deg;--c:${c};`, labelText(i, Math.floor(events.length / 2)));
         label.type = 'button';
         label.dataset.index = i;
-        label.setAttribute('aria-label', `${e.year} ${e.title} öffnen`);
+        label.setAttribute('aria-label', `Open ${e.year} ${e.title}`);
         label.onclick = () => openPanel(i);
         label.onmouseenter = () => setHover(i, true);
         label.onmouseleave = () => setHover(i, false);
@@ -2944,7 +2744,7 @@
       showPanelForIndex(i, { force: true });
       const e = events[i];
       if (e) {
-        copy.textContent = e.copy + (e.zoomLevel === 'day' ? ' — kaskadede · klick ↳ für stunden' : ' — fokus');
+        copy.textContent = e.copy + (e.zoomLevel === 'day' ? ' — cascade · click ↳ for hours' : ' — focus');
       }
       applyFocus(i);
       drawNetwork(i);
@@ -3109,8 +2909,8 @@
       phase.textContent = phaseReadout(active);
       const panelIdx = panelSuppressed ? null : (openedIndex ?? active);
       copy.textContent = panelSuppressed
-        ? ae?.copy + ' — scroll · ↳ reinzoomen für nächste ebene'
-        : (events[panelIdx]?.copy || ae?.copy) + ' — panel folgt scroll';
+        ? ae?.copy + ' — scroll · ↳ zoom in for the next level'
+        : (events[panelIdx]?.copy || ae?.copy) + ' — panel follows scroll';
       drawNetwork(panelSuppressed ? active : (openedIndex ?? active));
       if (dataPack?.source === 'cascade' && ae?.dayId && ae.zoomLevel === 'day') {
         ensureBundle(ae.dayId).catch(() => {});
@@ -3155,12 +2955,11 @@
       treeRenderGen = 0;
       zoom = { level: 'month', monthKey: null, dayId: null };
       document.getElementById('navCascade').classList.toggle('active', pack.source === 'cascade');
-      document.getElementById('navMma').classList.toggle('active', pack.source === 'mma');
       titleHint.textContent = pack.source === 'cascade' && (TimeCircleData.CONFIG.themeId || TimeCircleData.CONFIG.personId)
         ? ('Filter: ' + [TimeCircleData.CONFIG.personId && ('Person ' + TimeCircleData.CONFIG.personId),
             TimeCircleData.CONFIG.themeId && ('Theme ' + TimeCircleData.CONFIG.themeId)].filter(Boolean).join(' · ') +
-            ' · scroll = panel folgt fokus')
-        : 'Monate im reifen · scroll · ↳ reinzoomen → tage → stunden. · Zuerst 🔊 tippen für Sounds';
+            ' · scroll = panel follows focus')
+        : 'Months in the ring · scroll · zoom in → days → hours';
       updateTcCascadeFilterUi();
       if (!bloombergBar) bloombergBar = TimeCircleBloomberg.mount(document.getElementById('bloombergBar'));
       await applyZoomView({ scrollEnd: true });
@@ -3181,10 +2980,10 @@
     };
 
     async function boot() {
-      setBoot(true, TimeCircleData.CONFIG.source === 'mma' ? 'MMA-Buckets werden geladen…' : 'Kaskade-Tage werden geladen…');
+      setBoot(true, TimeCircleData.CONFIG.source === 'mma' ? 'Loading enrichment buckets…' : 'Loading cascade days…');
       try {
         const pack = await TimeCircleData.load();
-        if (!pack.events.length) throw new Error('Keine Ereignisse in der gewählten Quelle');
+        if (!pack.events.length) throw new Error('No events in selected data source');
         await mountApp(pack);
         if (pack.source === 'cascade') {
           pack.events.slice(-8).forEach(ev => {
@@ -3192,7 +2991,7 @@
           });
         }
       } catch (err) {
-        setBoot(true, `Daten konnten samht geladen werden: ${err.message}`, true);
+        setBoot(true, `Could not load data: ${err.message}`, true);
         TimeCircleData.log('ERROR', 'boot_failed', { error: String(err) });
         return;
       }

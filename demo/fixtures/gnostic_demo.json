@@ -1,0 +1,36 @@
+{
+  "_about": "Synthetic demo graph for Gnostic Spark + Bridge Rise. Fictional people (alex, sam, agent) and themes only.",
+  "memories": [
+    {"memory_id": "mem-hike-01", "content": "Alex and Sam hiked the ridge trail at sunset; the lake below turned orange.", "theme_id": "hiking-trail", "day_id": "2026-10-12", "person_id": "alex", "tags": ["hiking", "ridge", "sunset"], "privacy": 2, "recall_inject_l1": "Ridge trail at sunset with Sam"},
+    {"memory_id": "mem-hike-02", "content": "Planned a longer ridge loop for next weekend; Alex wants new boots first.", "theme_id": "hiking-trail", "day_id": "2026-10-15", "person_id": "alex", "tags": ["hiking", "boots", "weekend"], "privacy": 2, "recall_inject_l1": "Planning the long ridge loop"},
+    {"memory_id": "mem-hike-03", "content": "Knee felt sore after the ridge descent; doctor visit booked.", "theme_id": "hiking-trail", "day_id": "2026-10-16", "person_id": "alex", "tags": ["hiking", "health"], "privacy": 5, "recall_inject_l1": "Knee check after the descent"},
+    {"memory_id": "mem-alpha-01", "content": "Project Alpha sprint review: the roadmap slipped one week because of the export bug.", "theme_id": "project-alpha", "day_id": "2026-10-14", "person_id": "sam", "tags": ["alpha", "sprint", "roadmap"], "privacy": 2, "recall_inject_l1": "Alpha sprint slipped a week"},
+    {"memory_id": "mem-alpha-02", "content": "Fixed the Alpha export bug with a streaming writer; review is green.", "theme_id": "project-alpha", "day_id": "2026-10-17", "person_id": "agent", "tags": ["alpha", "export", "bugfix"], "privacy": 1, "recall_inject_l1": "Alpha export bug fixed"},
+    {"memory_id": "mem-bake-01", "content": "First sourdough loaf collapsed; starter was too young.", "theme_id": "sourdough-baking", "day_id": "2026-10-10", "person_id": "sam", "tags": ["sourdough", "starter", "baking"], "privacy": 3, "recall_inject_l1": "Sourdough loaf collapsed"},
+    {"memory_id": "mem-bake-02", "content": "Second sourdough bake rose well after feeding the starter twice a day.", "theme_id": "sourdough-baking", "day_id": "2026-10-18", "person_id": "sam", "tags": ["sourdough", "starter"], "privacy": 3, "recall_inject_l1": "Second sourdough rose well"},
+    {"memory_id": "mem-lake-01", "content": "Cold morning swim at the lake pier before work.", "theme_id": "place-lake-pier", "day_id": "2026-10-13", "person_id": "alex", "tags": ["place", "lake", "swim"], "privacy": 3, "recall_inject_l1": "Cold swim at the pier"},
+    {"memory_id": "mem-private-01", "content": "Long talk with Sam about family worries.", "theme_id": "family-talk", "day_id": "2026-10-19", "person_id": "sam", "tags": ["family"], "privacy": 4, "recall_inject_l1": "Talk with Sam about family"}
+  ],
+  "edges": [
+    {"src_node_id": "mem-hike-01", "dst_node_id": "theme:hiking-trail", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-hike-02", "dst_node_id": "theme:hiking-trail", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-hike-03", "dst_node_id": "theme:hiking-trail", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-hike-01", "dst_node_id": "mem-lake-01", "edge_type": "CO_RECALLED_WITH"},
+    {"src_node_id": "mem-alpha-01", "dst_node_id": "theme:project-alpha", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-alpha-02", "dst_node_id": "theme:project-alpha", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-alpha-02", "dst_node_id": "mem-alpha-01", "edge_type": "REFERENCES"},
+    {"src_node_id": "mem-bake-01", "dst_node_id": "theme:sourdough-baking", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-bake-02", "dst_node_id": "theme:sourdough-baking", "edge_type": "ABOUT"},
+    {"src_node_id": "mem-bake-02", "dst_node_id": "tag:starter", "edge_type": "TAGGED_WITH"},
+    {"src_node_id": "mem-bake-01", "dst_node_id": "tag:starter", "edge_type": "TAGGED_WITH"}
+  ],
+  "events": [
+    {"ts": "2026-10-20T08:00:00Z", "topics": ["hiking", "weekend"]},
+    {"ts": "2026-10-20T10:30:00Z", "topics": ["hiking", "boots"]},
+    {"ts": "2026-10-20T13:15:00Z", "topics": ["hiking", "alpha"]},
+    {"ts": "2026-10-20T15:45:00Z", "topics": ["alpha", "export"]},
+    {"ts": "2026-10-20T18:20:00Z", "topics": ["dinner"]},
+    {"ts": "2026-10-18T09:00:00Z", "topics": ["sourdough", "sourdough", "sourdough"]}
+  ],
+  "now": "2026-10-20T20:00:00Z"
+}

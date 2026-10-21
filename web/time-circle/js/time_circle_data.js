@@ -1,7 +1,7 @@
 /**
- * time_circle_data.js – Lädt Kaskade-Tage oder MMA-Buckets für Kaska Time Circle.
+ * time_circle_data.js – Loads Kaskade days or MMA buckets for Time Circle.
  * Created: 2026-06-28
- * Last updated: 2026-06-30 (day/hour/memory deep-link params)
+ * Last updated: 2026-10-21
  */
 (function (root) {
   "use strict";
@@ -49,20 +49,20 @@
 
   function friendlyFetchError(err, status, hint) {
     var raw = String((err && err.message) || err || "");
-    if (err && err.name === "AbortError") return "Timeout — Server antwortet samht rechtzeitig";
+    if (err && err.name === "AbortError") return "Timeout — the server did not answer in time";
     if (/did not match the expected pattern/i.test(raw) || err instanceof SyntaxError) {
-      return "API lieferte kein gültiges JSON" + (status ? " (HTTP " + status + ")" : "") +
+      return "API returned invalid JSON" + (status ? " (HTTP " + status + ")" : "") +
         (hint ? ": " + hint : "");
     }
     if (status && raw.indexOf("HTTP") !== 0) return "HTTP " + status + (hint ? ": " + hint : "");
-    return raw || "Unbekannter API-Fehler";
+    return raw || "Unknown API error";
   }
 
   function parseFetchBody(r) {
     return r.text().then(function (text) {
       var body = String(text || "");
       if (!body.trim()) {
-        throw new Error(friendlyFetchError(null, r.status, "leere Antwort"));
+        throw new Error(friendlyFetchError(null, r.status, "empty response"));
       }
       var ct = (r.headers.get("content-type") || "").toLowerCase();
       var looksJson = ct.indexOf("json") >= 0 || /^[\s[{]/.test(body);
@@ -126,7 +126,7 @@
   }
 
   function monthLabel(m) {
-    return ["JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"][m] || "?";
+    return ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][m] || "?";
   }
 
   function formatDayLabel(dayId, style) {
@@ -136,7 +136,7 @@
     var ml = monthLabel(dt.m);
     if (style === "iso") return dayId;
     if (style === "short") return dd + " " + ml;
-    return dd + ". " + ml + " " + dt.y;
+    return dd + " " + ml + " " + dt.y;
   }
 
   function berlinOffsetForDay(dayId) {
@@ -292,7 +292,7 @@
         phaseLabel: m.monthLabel + " " + y,
         title: m.monthLabel + " " + y,
         labelShort: m.monthLabel + " · " + y.slice(2),
-        copy: m.days.length + " tage · " + m.themeCount + " theme(s)",
+        copy: m.days.length + " days · " + m.themeCount + " theme(s)",
         childDayIds: m.days.map(function (x) { return x.dayId; }),
         themeCount: m.themeCount,
         dayCount: m.days.length,
@@ -333,7 +333,7 @@
         phaseKey: dayId + "-h" + h,
         phaseVon: label,
         phaseBis: label,
-        copy: "ruhe · keine events",
+        copy: "idle · no events",
         eventCount: 0,
         source: "hour",
       });
@@ -374,7 +374,7 @@
     var parts = ev.participants || [];
     if (parts.length) {
       var p = parts[0];
-      var label = p.display_name || p.persona || p.role || "unbekannt";
+      var label = p.display_name || p.persona || p.role || "unknown";
       var key = String(label).toLowerCase().replace(/\s+/g, "_");
       return { key: key, label: label, role: p.role || "", source: p.source || "" };
     }
@@ -386,8 +386,8 @@
   function roomFromEvent(ev) {
     var flags = ev.context_flags || {};
     var meta = ev.metadata || {};
-    var name = flags.discord_channel_name || meta.channel_name || flags.channel_name || "";
-    var id = String(flags.discord_channel_id || meta.channel_id || "");
+    var name = meta.channel_name || flags.channel_name || "";
+    var id = String(meta.channel_id || flags.channel_id || "");
     if (name) {
       var clean = String(name).replace(/^#/, "");
       return {
@@ -406,7 +406,7 @@
         return { key: ch.toLowerCase().replace(/[^a-z0-9]+/g, "_"), label: ch, channelId: "" };
       }
     }
-    return { key: "ohne_raum", label: "ohne raum", channelId: "" };
+    return { key: "no_room", label: "no room", channelId: "" };
   }
 
   function normalizeMmaEvent(ev) {
@@ -585,7 +585,7 @@
       slots.forEach(function (s) {
         s.copy = s.eventCount
           ? s.eventCount + " enrichment(s)"
-          : "ruhe · " + formatDayLabel(dayId, "short");
+          : "idle · " + formatDayLabel(dayId, "short");
       });
       log("INFO", "load_hours_done", {
         day_id: dayId,
@@ -657,7 +657,7 @@
         i += 1;
       }
       var end = i;
-      var kwLabel = "KW " + String(firstKw.kw).padStart(2, "0");
+      var kwLabel = "W " + String(firstKw.kw).padStart(2, "0");
       defs.push({
         start: start,
         end: end,
@@ -695,10 +695,10 @@
 
   function buildPhaseDefsForHours() {
     return [
-      { start: 0, end: 5, year: 0, von: "00", bis: "05", label: "nacht" },
-      { start: 6, end: 11, year: 0, von: "06", bis: "11", label: "tag" },
-      { start: 12, end: 17, year: 0, von: "12", bis: "17", label: "nachm" },
-      { start: 18, end: 23, year: 0, von: "18", bis: "23", label: "abend" },
+      { start: 0, end: 5, year: 0, von: "00", bis: "05", label: "night" },
+      { start: 6, end: 11, year: 0, von: "06", bis: "11", label: "day" },
+      { start: 12, end: 17, year: 0, von: "12", bis: "17", label: "afternoon" },
+      { start: 18, end: 23, year: 0, von: "18", bis: "23", label: "evening" },
     ];
   }
 
@@ -713,7 +713,7 @@
       var y = dt ? String(dt.y) : "—";
       var ml = dt ? monthLabel(dt.m) : "—";
       var tc = Number(d.theme_count || 0);
-      var title = tc ? tc + " THEME" + (tc === 1 ? "" : "S") : "TAG";
+      var title = tc ? tc + " THEME" + (tc === 1 ? "" : "S") : "DAY";
       return {
         index: idx,
         zoomLevel: "day",
@@ -903,6 +903,13 @@
   function loadDayBundle(dayId) {
     return fetchJson("/api/cascade/day/" + encodeURIComponent(dayId)).then(function (b) {
       var themes = (b.themes || []).map(function (t) {
+        if (typeof t === "string") {
+          return {
+            theme_id: t,
+            archivals: [],
+            label: formatThemeLabel(t),
+          };
+        }
         return {
           theme_id: t.theme_id || t.id,
           archivals: t.archivals || [],
@@ -967,7 +974,9 @@
 
   function load() {
     var aliasReady = loadPersonAliasConfig();
-    if (CONFIG.source === "mma") return aliasReady.then(function () { return loadMma(); });
+    if (CONFIG.source === "mma" || CONFIG.source === "enrichment") {
+      return aliasReady.then(function () { return loadMma(); });
+    }
     return aliasReady.then(function () { return loadCascade(); });
   }
 

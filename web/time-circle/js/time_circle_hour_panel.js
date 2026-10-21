@@ -1,7 +1,7 @@
 /**
- * time_circle_hour_panel.js – Stunden-Panel: MMA-Enrichment, Raum-Filter primär, Person optional.
+ * time_circle_hour_panel.js – Hour panel: MMA enrichment, room filter first, person optional.
  * Created: 2026-06-28
- * Last updated: 2026-06-28
+ * Last updated: 2026-10-21
  */
 (function (root) {
   "use strict";
@@ -34,7 +34,7 @@
     var d = new Date(ts);
     if (Number.isNaN(d.getTime())) return String(ts).slice(11, 19) || "—";
     try {
-      return new Intl.DateTimeFormat("de-DE", {
+      return new Intl.DateTimeFormat("en-GB", {
         timeZone: (D && D.CONFIG && D.CONFIG.tz) || "Europe/Berlin",
         hour: "2-digit",
         minute: "2-digit",
@@ -92,7 +92,7 @@
       (ev.senderRole ? '<span class="hour-msg-role">' + escapeHtml(ev.senderRole) + "</span>" : "") +
       stateBadge +
       "</header>" +
-      '<p class="hour-msg-text">' + escapeHtml(ev.summary || "(kein text)") + "</p>" +
+      '<p class="hour-msg-text">' + escapeHtml(ev.summary || "(no text)") + "</p>" +
       renderTopics(ev.topics) +
       renderInsights(ev.insights) +
       (ev.erip ? '<footer class="hour-msg-meta">' + renderErip(ev.erip) + "</footer>" : "") +
@@ -102,8 +102,8 @@
 
   function renderConversationGroup(group, color) {
     var title = group.isConversation
-      ? "↔ " + group.participantLabels.join(" · ") + " · " + group.events.length + " nachrichten"
-      : "einzel · " + (group.participantLabels[0] || "event");
+      ? "↔ " + group.participantLabels.join(" · ") + " · " + group.events.length + " messages"
+      : "solo · " + (group.participantLabels[0] || "event");
     var body = group.events.map(function (ev) {
       return renderMessageCard(ev, color);
     }).join("");
@@ -125,7 +125,7 @@
       '<section class="hour-room-block">' +
       '<div class="hour-room-head">#' + escapeHtml(room.label) + " · " + room.count +
       " · " + sessions.length + " session(s)" +
-      (convCount ? " · " + convCount + " konv." : "") +
+      (convCount ? " · " + convCount + " conv." : "") +
       "</div>" +
       inner +
       "</section>"
@@ -162,7 +162,7 @@
     var html = '<span class="hour-filter-label">' + escapeHtml(opts.label) + ":</span>";
     html +=
       '<button type="button" class="hour-sender-chip' + (allActive ? " active" : "") +
-      '" data-filter-key="__all__">Alle (' + opts.total + ")</button>";
+      '" data-filter-key="__all__">All (' + opts.total + ")</button>";
     (opts.items || []).forEach(function (item) {
       var active = selected.indexOf(item.key) >= 0;
       html +=
@@ -183,7 +183,7 @@
 
     renderFilterRow(container, {
       targetId: "#hourRoomFilters",
-      label: "Raum",
+      label: "Room",
       kind: "room",
       dayId: dayId,
       total: events.length,
@@ -206,8 +206,8 @@
       body.innerHTML =
         '<p class="hour-empty">' +
         (events.length
-          ? "Keine Einträge für die gewählten Räume/Personen in " + escapeHtml(String(hour).padStart(2, "0")) + ":00."
-          : "Keine MMA-Enrichment-Einträge in dieser Stunde.") +
+          ? "No entries for the selected rooms or people in " + escapeHtml(String(hour).padStart(2, "0")) + ":00."
+          : "No MMA enrichment entries in this hour.") +
         "</p>";
       return;
     }
@@ -215,7 +215,7 @@
     var roomGroups = D.groupEventsByRoom(filtered);
     var stats = container.querySelector("#hourPanelStats");
     if (stats) {
-      stats.textContent = filtered.length + " eintrag(e) · " + roomGroups.length + " raum/raum(e)";
+      stats.textContent = filtered.length + " entr" + (filtered.length === 1 ? "y" : "ies") + " · " + roomGroups.length + " room" + (roomGroups.length === 1 ? "" : "s");
     }
 
     body.innerHTML = roomGroups.map(function (room) {
@@ -225,7 +225,7 @@
 
   function render(container, opts) {
     if (!D) {
-      container.innerHTML = '<p class="graph-error">TimeCircleData fehlt</p>';
+      container.innerHTML = '<p class="graph-error">TimeCircleData missing</p>';
       return Promise.resolve();
     }
     var dayId = opts.dayId;
@@ -237,15 +237,15 @@
     container.innerHTML =
       '<button type="button" class="tree-close" id="hourPanelClose">×</button>' +
       '<div class="tree-path">' +
-      '<span><b>stunde</b> ' + escapeHtml(hourLabel) + " · " + escapeHtml(dayId) + "</span>" +
+      '<span><b>hour</b> ' + escapeHtml(hourLabel) + " · " + escapeHtml(dayId) + "</span>" +
       "</div>" +
       '<div class="hour-panel-head">' +
-      '<span class="hour-panel-title">MMA · enrichment · nach raum</span>' +
-      '<span class="hour-panel-stats" id="hourPanelStats">Lade …</span>' +
+      '<span class="hour-panel-title">MMA · enrichment · by room</span>' +
+      '<span class="hour-panel-stats" id="hourPanelStats">Loading…</span>' +
       "</div>" +
       '<div class="hour-sender-filters" id="hourRoomFilters"></div>' +
       '<div class="hour-sender-filters hour-person-filters" id="hourPersonFilters"></div>' +
-      '<div class="hour-panel-body" id="hourPanelBody"><p class="hour-loading">Lade enrichment …</p></div>';
+      '<div class="hour-panel-body" id="hourPanelBody"><p class="hour-loading">Loading enrichment…</p></div>';
 
     var closeBtn = container.querySelector("#hourPanelClose");
     if (closeBtn) {
@@ -269,7 +269,7 @@
       });
     }).catch(function (err) {
       var bodyEl = container.querySelector("#hourPanelBody");
-      if (bodyEl) bodyEl.innerHTML = '<p class="graph-error">Fehler: ' + escapeHtml(err.message) + "</p>";
+      if (bodyEl) bodyEl.innerHTML = '<p class="graph-error">Error: ' + escapeHtml(err.message) + "</p>";
       log("ERROR", "hour_panel_failed", { day_id: dayId, hour: hour, error: String(err) });
     });
   }

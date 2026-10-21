@@ -3,34 +3,51 @@
 main.py – Thin FastAPI server for Kaskade Memory OSS.
 
 Created: 2026-08-28
-Last updated: 2026-08-28
+Last updated: 2026-10-20
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from kaskade.cascade.eod.reconcile import run_eod_reconcile
 from kaskade.cascade.maintainer.queue import read_queue
 from kaskade.erip.weighting import parse_mandatory_erip_from_content
-from kaskade.gnostic.shadow import maybe_generate_spark
+from kaskade.gnostic.demo_fixture import load_demo_fixture
+from kaskade.gnostic.shadow import generate_spark_from_graph
+from kaskade.gnostic.spreading.inject_guard import InjectGuard
+from kaskade.gnostic.spreading.recall import spread
 from kaskade.gnostic.traverse import gnostic_traverse
-from kaskade.memory.postgres_store import connect, get_day_bundle, init_schema, insert_archival, list_cascade_days
+from kaskade.cascade.envelope import stamp_archival_metadata
+from kaskade.memory.postgres_store import (
+    connect,
+    get_archival_memory,
+    get_day_bundle,
+    init_schema,
+    insert_archival,
+    list_cascade_days,
+    suggest_persons,
+    suggest_themes,
+)
 from kaskade.memory.prompt_gates import filter_core_blocks_for_prompt
 from kaskade.reflex.significance_gate import evaluate_cascade_significance
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Kaskade Memory", version="0.1.0")
+_SPREAD_GUARD = InjectGuard(cooldown_s=120.0)
 
 
 @app.on_event("startup")
@@ -38,8 +55,23 @@ def _startup() -> None:
     try:
         with connect() as conn:
             init_schema(conn)
-    except Exception:
-        pass
+        logger.info(json.dumps({"level": "INFO", "module": "api.main", "message": "schema_ready"}))
+    except Exception as exc:
+        logger.error(
+            json.dumps(
+                {
+                    "level": "ERROR",
+                    "module": "api.main",
+                    "message": "schema_init_failed",
+                    "error": str(exc),
+                }
+            )
+        )
+
+
+@app.get("/")
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/time-circle/")
 
 
 class ArchivalInsert(BaseModel):
@@ -55,9 +87,26 @@ class TraverseRequest(BaseModel):
     hops: int = 3
 
 
+class SparkSimulateRequest(BaseModel):
+    seeds: List[str] = ["hiking-trail"]
+    allow_place: bool = False
+    delivery: str = "log"
+
+
+class SpreadSimulateRequest(BaseModel):
+    turn_text: str
+    channel: str = "dm:alex"
+    climate_boost: float = 1.0
+
+
 @app.get("/api/health")
-def health() -> Dict[str, str]:
-    return {"status": "ok"}
+def health() -> Dict[str, Any]:
+    try:
+        with connect() as conn:
+            conn.execute("SELECT 1")
+        return {"status": "ok", "database": "connected"}
+    except Exception as exc:
+        return {"status": "degraded", "database": "error", "detail": str(exc)[:200]}
 
 
 @app.get("/api/cascade/days")
@@ -79,14 +128,38 @@ def persons_aliases() -> Dict[str, Any]:
     return persons_alias_config()
 
 
+@app.get("/api/cascade/memory/{memory_id}")
+def cascade_memory(memory_id: str) -> Dict[str, Any]:
+    with connect() as conn:
+        row = get_archival_memory(conn, memory_id)
+    if not row:
+        raise HTTPException(404, detail="memory_not_found")
+    return row
+
+
+@app.get("/api/cascade/themes/suggest")
+def cascade_theme_suggest(q: str = "", limit: int = 12) -> Dict[str, Any]:
+    with connect() as conn:
+        return {"themes": suggest_themes(conn, q=q, limit=limit)}
+
+
+@app.get("/api/cascade/persons/suggest")
+def cascade_person_suggest(q: str = "", limit: int = 12) -> Dict[str, Any]:
+    with connect() as conn:
+        return {"persons": suggest_persons(conn, q=q, limit=limit)}
+
+
 @app.post("/api/cascade/archival")
 def archival_insert(body: ArchivalInsert) -> Dict[str, Any]:
     gate = evaluate_cascade_significance(content=body.content, theme_id=body.theme_id)
     if gate.get("decision") == "reject":
         raise HTTPException(400, detail=gate)
-    meta: Dict[str, Any] = {"episode_date": body.episode_date} if body.episode_date else {}
+    meta: Dict[str, Any] = {}
+    if body.episode_date:
+        meta["episode_date"] = body.episode_date
     if body.theme_id:
         meta["theme_id"] = body.theme_id
+    meta = stamp_archival_metadata(meta, person_id=body.person_id)
     with connect() as conn:
         mid = insert_archival(conn, content=body.content, person_id=body.person_id, metadata=meta)
     return {"memory_id": mid, "gate": gate}
@@ -98,10 +171,36 @@ def cascade_gnostic_traverse(body: TraverseRequest) -> Dict[str, Any]:
 
 
 @app.post("/api/gnostic/spark/simulate")
-def spark_simulate() -> Dict[str, Any]:
-    candidates = [{"memory_id": "demo-1", "content": "Walked the trail at sunset.", "score": 0.8, "privacy": 2, "recall_inject_l1": "Alex · hike · evening"}]
-    spark = maybe_generate_spark(agent_id="agent", candidates=candidates)
+def spark_simulate(body: Optional[SparkSimulateRequest] = None) -> Dict[str, Any]:
+    req = body or SparkSimulateRequest()
+    demo = load_demo_fixture()
+    spark = generate_spark_from_graph(
+        agent_id="agent",
+        seeds=req.seeds,
+        memories=demo.memories,
+        edges=demo.edges,
+        allow_place=req.allow_place,
+        delivery=req.delivery,
+    )
     return {"spark": spark}
+
+
+@app.post("/api/cascade/spread/simulate")
+def spread_simulate(body: SpreadSimulateRequest, force: bool = False) -> Dict[str, Any]:
+    turn = (body.turn_text or "")[:4000]
+    if not turn.strip():
+        raise HTTPException(400, detail="turn_text_required")
+    demo = load_demo_fixture()
+    result = spread(
+        turn,
+        channel=body.channel[:80],
+        memories=demo.memories,
+        events=demo.events,
+        now=demo.now,
+        climate_boost=body.climate_boost,
+        guard=None if force else _SPREAD_GUARD,
+    )
+    return result.to_dict()
 
 
 @app.post("/api/cascade/eod/{day_id}")

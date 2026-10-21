@@ -1,19 +1,19 @@
 /**
- * time_circle_graph_nav.js – Kaskade-Graf-Navigation (Archival → Nachbarn → weiter).
+ * time_circle_graph_nav.js – Kaskade graph navigation (archival to neighbors).
  * Created: 2026-06-28
- * Last updated: 2026-06-30 (person ABOUT dedupe via canosamal aliases)
+ * Last updated: 2026-10-21
  */
 (function (root) {
   "use strict";
 
   var EDGE_SECTION_ORDER = ["REFERENCES", "EPISODE_OF", "ABOUT", "TAGGED_WITH", "CO_RECALLED_WITH", "CONTAINS", "SOFT_LINK", "HARD_LINK"];
   var EDGE_SECTION_LABELS = {
-    REFERENCES: "Referenzen",
+    REFERENCES: "References",
     EPISODE_OF: "Episode",
-    ABOUT: "Personen (ABOUT)",
+    ABOUT: "People (ABOUT)",
     TAGGED_WITH: "Tags",
     CO_RECALLED_WITH: "Co-Recall",
-    CONTAINS: "Enthält",
+    CONTAINS: "Contains",
     SOFT_LINK: "Soft-Link",
     HARD_LINK: "Hard-Link",
   };
@@ -60,17 +60,17 @@
   function friendlyFetchError(err, status, hint) {
     var raw = String((err && err.message) || err || "");
     if (/did not match the expected pattern/i.test(raw) || err instanceof SyntaxError) {
-      return "API lieferte kein gültiges JSON" + (status ? " (HTTP " + status + ")" : "") +
+      return "API returned invalid JSON" + (status ? " (HTTP " + status + ")" : "") +
         (hint ? ": " + hint : "");
     }
     if (status && raw.indexOf("HTTP") !== 0) return "HTTP " + status + (hint ? ": " + hint : "");
-    return raw || "Unbekannter API-Fehler";
+    return raw || "Unknown API error";
   }
 
   function parseFetchBody(r) {
     return r.text().then(function (text) {
       var body = String(text || "");
-      if (!body.trim()) throw new Error(friendlyFetchError(null, r.status, "leere Antwort"));
+      if (!body.trim()) throw new Error(friendlyFetchError(null, r.status, "empty response"));
       var ct = (r.headers.get("content-type") || "").toLowerCase();
       var looksJson = ct.indexOf("json") >= 0 || /^[\s[{]/.test(body);
       if (!looksJson) throw new Error(friendlyFetchError(null, r.status, stripHtmlHint(body)));
@@ -120,7 +120,7 @@
   function mediaBadgeHtml(a, compact) {
     var n = mediaCountForArchival(a);
     if (!n) return "";
-    var label = n === 1 ? "1 Foto" : n + " Fotos";
+    var label = n === 1 ? "1 photo" : n + " photos";
     return '<span class="graph-media-badge' + (compact ? " compact" : "") + '" title="' + escapeHtml(label) + '">' +
       '<span class="graph-media-icon" aria-hidden="true">📷</span>' +
       '<span class="graph-media-count">' + n + "</span></span>";
@@ -368,9 +368,9 @@
       '<button type="button" class="tree-close" id="graphNavClose">×</button>' +
       '<div class="graph-breadcrumb" id="graphBreadcrumb">' + breadcrumb + "</div>" +
       '<div class="graph-title" id="graphTitle">' + escapeHtml(title) + "</div>" +
-      '<div class="graph-body" id="graphBody"><p class="graph-loading">Lade …</p></div>' +
+      '<div class="graph-body" id="graphBody"><p class="graph-loading">Loading…</p></div>' +
       '<div class="graph-mini-wrap">' +
-      '<div class="graph-mini-label" id="graphMiniLabel">Zeit · Spirale</div>' +
+      '<div class="graph-mini-label" id="graphMiniLabel">Time · spiral</div>' +
       '<svg class="graph-mini" id="graphMini" viewBox="0 0 400 300" role="img" aria-labelledby="graphMiniLabel"></svg>' +
       "</div>";
     var self = this;
@@ -422,7 +422,7 @@
       parts.push('<span class="crumb active">' + escapeHtml(this.current.shortTitle || this.current.title) + "</span>");
     }
     var back = this.stack.length
-      ? '<button type="button" class="graph-back" id="graphNavBack">← zurück</button>'
+      ? '<button type="button" class="graph-back" id="graphNavBack">← back</button>'
       : "";
     return back + parts.join('<span class="crumb-sep">›</span>');
   };
@@ -441,8 +441,8 @@
     if (!svg) return;
     var nodes = (spec.nodes || []).slice();
     if (!nodes.length) {
-      svg.innerHTML = '<text x="200" y="150" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="10">keine zeitknoten</text>';
-      if (labelEl) labelEl.textContent = "Zeit · Spirale";
+      svg.innerHTML = '<text x="200" y="150" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="10">no time nodes</text>';
+      if (labelEl) labelEl.textContent = "Time · spiral";
       return;
     }
     nodes.sort(function (a, b) {
@@ -513,12 +513,12 @@
       }
     });
     parts.push(
-      '<text x="14" y="292" fill="rgba(255,255,255,.4)" font-size="8">älter</text>' +
-      '<text x="386" y="292" text-anchor="end" fill="rgba(255,255,255,.4)" font-size="8">neuer ↻</text>'
+      '<text x="14" y="292" fill="rgba(255,255,255,.4)" font-size="8">older</text>' +
+      '<text x="386" y="292" text-anchor="end" fill="rgba(255,255,255,.4)" font-size="8">newer ↻</text>'
     );
     svg.innerHTML = parts.join("");
     if (labelEl) {
-      var title = spec.title ? String(spec.title).slice(0, 28) : "Zeit · Spirale";
+      var title = spec.title ? String(spec.title).slice(0, 28) : "Time · spiral";
       var range = spec.subtitle || formatSpiralRange(nodes);
       labelEl.textContent = range ? title + " · " + range : title;
     }
@@ -591,7 +591,7 @@
         var mid = btn.getAttribute("data-memory-id") || "";
         var tag = btn.getAttribute("data-tag-name") || "";
         if (!mid || !tag) return;
-        if (!window.confirm("Tag #" + tag + " von diesem Archival entfernen?")) return;
+        if (!window.confirm("Remove tag #" + tag + " from this archival?")) return;
         patchMemory(mid, { tags_remove: [tag], reviewed_by: "alex" })
           .then(function () {
             log("INFO", "tag_removed_via_graph", { memory_id: mid, tag: tag });
@@ -633,16 +633,16 @@
         var personRef = btn.getAttribute("data-person-ref") || "";
         var personLabel = btn.getAttribute("data-person-label") || personRef;
         if (!mid || !personRef) return;
-        if (!window.confirm("Person \"" + personLabel + "\" von diesem Archival entfernen?")) return;
+        if (!window.confirm("Remove person \"" + personLabel + "\" from this archival?")) return;
         patchMemory(mid, { persons_remove: [personRef], reviewed_by: "alex" })
           .then(function () {
             log("INFO", "person_removed_via_graph", { memory_id: mid, person_ref: personRef });
-            showGraphToast("Person \"" + personLabel + "\" entfernt", true);
+            showGraphToast("Removed person \"" + personLabel + "\"", true);
             self.openMemory(mid, true);
           })
           .catch(function (err) {
             log("ERROR", "person_remove_failed", { memory_id: mid, person_ref: personRef, error: String(err) });
-            showGraphToast("Speichern fehlgeschlagen: " + err.message, false);
+            showGraphToast("Save failed: " + err.message, false);
           });
       });
     });
@@ -656,12 +656,12 @@
           .then(function () {
             if (input) input.value = "";
             log("INFO", "person_added_via_graph", { memory_id: mid, person_id: raw });
-            showGraphToast("Person \"" + raw + "\" gespeichert", true);
+            showGraphToast("Saved person \"" + raw + "\"", true);
             self.openMemory(mid, true);
           })
           .catch(function (err) {
             log("ERROR", "person_add_failed", { memory_id: mid, error: String(err) });
-            showGraphToast("Speichern fehlgeschlagen: " + err.message, false);
+            showGraphToast("Save failed: " + err.message, false);
           });
       });
     });
@@ -676,18 +676,18 @@
         if (label) payload.label = label;
         if (personId) payload.person_id = personId;
         if (!payload.label && !payload.person_id) {
-          showGraphToast("Label oder person_id eingeben", false);
+          showGraphToast("Enter a label or person_id", false);
           return;
         }
         patchPerson(personRef, payload)
           .then(function () {
             log("INFO", "person_node_saved", { person_ref: personRef, payload: payload });
-            showGraphToast("Person gespeichert", true);
+            showGraphToast("Person saved", true);
             self.openPerson(personRef, true);
           })
           .catch(function (err) {
             log("ERROR", "person_save_failed", { person_ref: personRef, error: String(err) });
-            showGraphToast("Speichern fehlgeschlagen: " + err.message, false);
+            showGraphToast("Save failed: " + err.message, false);
           });
       });
     });
@@ -696,7 +696,7 @@
         e.stopPropagation();
         var mid = btn.getAttribute("data-memory-id") || "";
         var personId = btn.getAttribute("data-person-id") || "";
-        var comment = "Falsche ABOUT-Kante: " + personId + " bei Archival " + mid.slice(0, 8);
+        var comment = "Wrong ABOUT edge: " + personId + " on archival " + mid.slice(0, 8);
         fetchJson("/api/cascade/reviews", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -710,7 +710,7 @@
         })
           .then(function () {
             log("INFO", "about_edge_flagged", { memory_id: mid, person_id: personId });
-            alert("Review-Flag für ABOUT " + personId + " gespeichert");
+            alert("Saved review flag for ABOUT " + personId);
           })
           .catch(function (err) {
             log("ERROR", "about_flag_failed", { memory_id: mid, error: String(err) });
@@ -728,12 +728,12 @@
         '<button type="button" data-person-edge-remove data-memory-id="' + escapeHtml(mid) +
         '" data-person-ref="' + escapeHtml(ref.id) +
         '" data-person-label="' + escapeHtml(label) +
-        '" title="Person entfernen">✎</button></span>';
+        '" title="Remove person">✎</button></span>';
     }).join("");
-    return '<div class="graph-section"><div class="graph-section-title">Personen (ABOUT)</div>' +
-      '<div class="graph-person-list">' + (chips || '<span class="graph-empty">Keine Personen</span>') + '</div>' +
+    return '<div class="graph-section"><div class="graph-section-title">People (ABOUT)</div>' +
+      '<div class="graph-person-list">' + (chips || '<span class="graph-empty">No people</span>') + '</div>' +
       '<div class="graph-person-editor-row">' +
-      '<input type="text" class="graph-person-input" placeholder="Person-ID (z. B. alex, sam)…" data-person-add-input="' + escapeHtml(mid) + '" list="graphPersonSuggest" />' +
+      '<input type="text" class="graph-person-input" placeholder="Person id (e.g. alex, sam)…" data-person-add-input="' + escapeHtml(mid) + '" list="graphPersonSuggest" />' +
       '<button type="button" class="graph-person-add-btn" data-person-add-btn="' + escapeHtml(mid) + '">+ Person</button>' +
       '</div></div>';
   };
@@ -742,13 +742,13 @@
     var props = (personNode && personNode.properties) || {};
     var label = (personNode && personNode.label) || personRef.replace(/^person_/, "");
     var pid = String(props.person_id || personRef.replace(/^person_/, "")).trim();
-    return '<div class="graph-section"><div class="graph-section-title">Person bearbeiten</div>' +
+    return '<div class="graph-section"><div class="graph-section-title">Edit person</div>' +
       '<div class="graph-person-form">' +
       '<label class="graph-person-field"><span>Label</span>' +
       '<input type="text" class="graph-person-input" data-person-label-input="' + escapeHtml(personRef) + '" value="' + escapeHtml(label) + '" /></label>' +
       '<label class="graph-person-field"><span>person_id</span>' +
       '<input type="text" class="graph-person-input" data-person-id-input="' + escapeHtml(personRef) + '" value="' + escapeHtml(pid) + '" /></label>' +
-      '<button type="button" class="graph-person-add-btn" data-person-save="' + escapeHtml(personRef) + '">Speichern</button>' +
+      '<button type="button" class="graph-person-add-btn" data-person-save="' + escapeHtml(personRef) + '">Save</button>' +
       '</div></div>';
   };
 
@@ -757,15 +757,15 @@
     var chips = (tags || []).map(function (tag) {
       return '<span class="graph-tag-chip">#' + escapeHtml(tag) +
         '<button type="button" data-tag-edge-edit data-memory-id="' + escapeHtml(mid) +
-        '" data-tag-name="' + escapeHtml(tag) + '" title="Tag entfernen">✎</button></span>';
+        '" data-tag-name="' + escapeHtml(tag) + '" title="Remove tag">✎</button></span>';
     }).join("");
     return '<div class="graph-section"><div class="graph-section-title">Tags (persistent)</div>' +
-      '<div class="graph-tag-list">' + (chips || '<span class="graph-empty">Keine Tags</span>') + '</div>' +
+      '<div class="graph-tag-list">' + (chips || '<span class="graph-empty">No tags</span>') + '</div>' +
       '<div class="graph-tag-editor-row">' +
-      '<input type="text" class="graph-tag-input" placeholder="Neuer Tag…" data-tag-add-input="' + escapeHtml(mid) + '" />' +
+      '<input type="text" class="graph-tag-input" placeholder="New tag…" data-tag-add-input="' + escapeHtml(mid) + '" />' +
       '<button type="button" class="graph-tag-add-btn" data-tag-add-btn="' + escapeHtml(mid) + '">+ Tag</button>' +
       (reviewed ? '<span class="graph-reviewed-badge">✓ reviewed</span>' :
-        '<button type="button" class="graph-tag-add-btn" data-mark-reviewed="' + escapeHtml(mid) + '">Als reviewed</button>') +
+        '<button type="button" class="graph-tag-add-btn" data-mark-reviewed="' + escapeHtml(mid) + '">Mark reviewed</button>') +
       '</div></div>';
   };
 
@@ -776,13 +776,13 @@
       var tagName = tagNameFromRef(memoryTags, g.ref);
       editBtn = '<button type="button" class="graph-neighbor-edit" data-tag-edge-edit data-memory-id="' +
         escapeHtml(mid) + '" data-tag-name="' + escapeHtml(tagName) +
-        '" title="Tag entfernen">✎</button>';
+        '" title="Remove tag">✎</button>';
     } else if (g.edge.type === "ABOUT" && mid && g.ref.kind === "person") {
       var personLabel = formatLabel(g.ref);
       editBtn = '<button type="button" class="graph-neighbor-edit" data-person-edge-remove data-memory-id="' +
         escapeHtml(mid) + '" data-person-ref="' + escapeHtml(g.ref.id) +
         '" data-person-label="' + escapeHtml(personLabel) +
-        '" title="Person von Archival entfernen">✎</button>';
+        '" title="Remove person from archival">✎</button>';
     }
     return '<div class="graph-neighbor-row">' +
       '<button type="button" class="graph-neighbor" data-graph-nav data-kind="' + escapeHtml(g.ref.kind) +
@@ -795,7 +795,7 @@
 
   GraphNav.prototype._neighborSection = function (edges, memoryId, memoryTags) {
     if (!edges || !edges.length) {
-      return '<p class="graph-empty">Keine Graf-Kanten</p>';
+      return '<p class="graph-empty">No graph edges</p>';
     }
     var mid = normMemoryId(memoryId || "");
     var byType = {};
@@ -818,7 +818,7 @@
       if (ia !== ib) return ia - ib;
       return a.localeCompare(b);
     });
-    var html = '<div class="graph-section"><div class="graph-section-title">Verknüpfungen im Grafen</div>';
+    var html = '<div class="graph-section"><div class="graph-section-title">Graph links</div>';
     typeKeys.forEach(function (etype) {
       var label = EDGE_SECTION_LABELS[etype] || etype;
       var grouped = byType[etype];
@@ -855,7 +855,7 @@
           id: mid,
           kind: "memory",
           label: l1.slice(0, 18) || mid.slice(0, 8),
-          shortLabel: "hier",
+          shortLabel: "here",
           color: "#41dce1",
           edgeType: "FOCUS",
           timeKey: focusTime,
@@ -896,7 +896,7 @@
         log("INFO", "open_memory_done", { memory_id: mid, edges: edges.length, ms: Math.round(performance.now() - t0) });
       })
       .catch(function (err) {
-        body.innerHTML = '<p class="graph-error">Fehler: ' + escapeHtml(err.message) + "</p>";
+        body.innerHTML = '<p class="graph-error">Error: ' + escapeHtml(err.message) + "</p>";
         log("ERROR", "open_memory_failed", { memory_id: mid, error: String(err) });
       });
   };
@@ -946,12 +946,12 @@
         }
         self._drawTemporalSpiralGraph({
           title: themeLabel,
-          subtitle: (b.day_ids && b.day_ids.length) ? b.day_ids.length + " tage" : "",
+          subtitle: (b.day_ids && b.day_ids.length) ? b.day_ids.length + " days" : "",
           nodes: spiralNodes.slice(0, 24),
         });
         var html = "";
         if (b.day_ids && b.day_ids.length) {
-          html += '<div class="graph-section"><div class="graph-section-title">Tage</div><div class="graph-neighbors">';
+          html += '<div class="graph-section"><div class="graph-section-title">Days</div><div class="graph-neighbors">';
           b.day_ids.forEach(function (d) {
             html +=
               '<button type="button" class="graph-neighbor" data-graph-nav data-kind="day" data-id="' +
@@ -967,14 +967,14 @@
             archivalCardInner(a, 200) +
             "</button>";
         });
-        if (!archs.length) html += '<p class="graph-empty">Keine Archivals</p>';
+        if (!archs.length) html += '<p class="graph-empty">No archivals</p>';
         html += "</div>";
         body.innerHTML = html;
         self._wireNeighbors();
         log("INFO", "open_theme_done", { theme_id: tid, archivals: archs.length });
       })
       .catch(function (err) {
-        body.innerHTML = '<p class="graph-error">Fehler: ' + escapeHtml(err.message) + "</p>";
+        body.innerHTML = '<p class="graph-error">Error: ' + escapeHtml(err.message) + "</p>";
       });
   };
 
@@ -1026,13 +1026,13 @@
             archivalCardInner(a, 180) +
             "</button>";
         });
-        if (!archs.length) html += '<p class="graph-empty">Keine Archivals</p>';
+        if (!archs.length) html += '<p class="graph-empty">No archivals</p>';
         html += "</div>";
         body.innerHTML = html;
         self._wireNeighbors();
       })
       .catch(function (err) {
-        body.innerHTML = '<p class="graph-error">Fehler: ' + escapeHtml(err.message) + "</p>";
+        body.innerHTML = '<p class="graph-error">Error: ' + escapeHtml(err.message) + "</p>";
       });
   };
 
@@ -1044,11 +1044,11 @@
       this._push({
         kind: "day",
         id: id,
-        title: "Tag",
+        title: "Day",
         shortTitle: root.TimeCircleData ? root.TimeCircleData.formatDayLabel(id, "short") : id,
       });
     }
-    this._renderShell("Tag · " + id, this._breadcrumbHtml());
+    this._renderShell("Day · " + id, this._breadcrumbHtml());
     var body = this.container.querySelector("#graphBody");
     fetchJson("/api/cascade/day/" + encodeURIComponent(id))
       .then(function (b) {
@@ -1073,7 +1073,7 @@
             id: id,
             kind: "day",
             label: id,
-            shortLabel: "tag",
+            shortLabel: "day",
             color: "#9dc76d",
             edgeType: "DAY",
             timeKey: parseTimeKey(id),
@@ -1084,7 +1084,7 @@
             id: id,
             kind: "day",
             label: id,
-            shortLabel: "tag",
+            shortLabel: "day",
             color: "#9dc76d",
             edgeType: "DAY",
             timeKey: parseTimeKey(id),
@@ -1112,13 +1112,13 @@
               "<span class=\"arch-preview\">" + escapeHtml((a.l1 || "").substring(0, 120)) + "</span></button>";
           });
         });
-        if (!themes.length) html += '<p class="graph-empty">Keine Themes</p>';
+        if (!themes.length) html += '<p class="graph-empty">No themes</p>';
         html += "</div>";
         body.innerHTML = html;
         self._wireNeighbors();
       })
       .catch(function (err) {
-        body.innerHTML = '<p class="graph-error">Fehler: ' + escapeHtml(err.message) + "</p>";
+        body.innerHTML = '<p class="graph-error">Error: ' + escapeHtml(err.message) + "</p>";
       });
   };
 
