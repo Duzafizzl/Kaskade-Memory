@@ -1,0 +1,22 @@
+%% File: lifetimes.mmd
+%% Description: Doctrine, reference, and working memory as three Prism 2D groups.
+%% Created: 2026-11-03
+%% Last updated: 2026-11-03
+flowchart LR
+  subgraph doctrine [Doctrine]
+    person["Person<br/>limits"]
+    law["Constitution<br/>stop words"]
+  end
+  subgraph reference [Reference]
+    errors["Errors<br/>dated list"]
+    packs["Packs<br/>on cue"]
+  end
+  subgraph working [Working]
+    scratch["Scratchpad<br/>overwrite"]
+    days["Days<br/>then archive"]
+  end
+  scratch --> days
+  days --> packs
+  days --> law
+
+  classDef ok fill:#3c3

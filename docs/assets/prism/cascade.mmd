@@ -1,0 +1,31 @@
+%% File: cascade.mmd
+%% Description: Write, cascade, and read as three Prism 2D groups.
+%% Created: 2026-11-03
+%% Last updated: 2026-11-03
+flowchart LR
+  subgraph write [Write]
+    insert["Insert<br/>archival row"]
+    erip["ERIP<br/>scores 1 to 5"]
+    gate["Gate<br/>significance"]
+    insert --> erip --> gate
+  end
+  subgraph cascade [Cascade]
+    day["Days<br/>rolling"]
+    week["Weeks"]
+    month["Months"]
+    year["Years"]:::ok
+    day --> week --> month --> year
+  end
+  subgraph read [Read]
+    search["Search"]
+    spark["Spark<br/>one line"]:::accent
+    rise["Rise<br/>two signals"]:::warn
+  end
+  gate --> day
+  year --> search
+  year --> spark
+  year --> rise
+
+  classDef ok fill:#3c3
+  classDef accent fill:#48c
+  classDef warn fill:#c83

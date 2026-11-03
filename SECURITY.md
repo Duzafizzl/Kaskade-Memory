@@ -2,12 +2,12 @@
 title: SECURITY.md
 description: Security policy for Kaskade Memory OSS.
 created: 2026-08-28
-updated: 2026-10-21
+updated: 2026-10-26
 ---
 
-# Security Policy
+# Security policy
 
-Kaskade Memory is a **demo-oriented memory engine**, not a production secrets vault.
+Kaskade Memory is a demo memory system, not a production secrets vault.
 
 ## Reporting
 

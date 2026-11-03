@@ -2,13 +2,13 @@
 title: BRIDGE_RISE.md
 description: How Bridge Rise surfaces older episodes when several independent signals agree on the current topic.
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-11-03
 ---
 
 # Bridge Rise
 
-Bridge Rise answers: *"we are talking about X right now; is there an older episode worth bringing back?"*
-It only fires when **at least two independent sharp signals** agree on the same theme (Door-B).
+Bridge Rise answers whether an older episode is worth bringing back while you are talking about X.
+It only fires when at least two independent sharp signals agree on the same theme (Door-B).
 
 ## Signals
 

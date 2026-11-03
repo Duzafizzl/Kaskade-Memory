@@ -1,0 +1,31 @@
+%% File: spark-rise.mmd
+%% Description: Spark rank path and Bridge Rise Door-B as two Prism 2D groups.
+%% Created: 2026-11-03
+%% Last updated: 2026-11-03
+flowchart LR
+  subgraph spark [Spark]
+    pool["Pool<br/>cascade first"]
+    rank["Rank<br/>R and P_rel"]
+    two["Two cues<br/>P below 5"]:::warn
+    line["One line<br/>cooldown"]:::accent
+    pool --> rank --> two --> line
+  end
+  subgraph rise [Rise]
+    frag["Fragment<br/>sharp"]
+    tag["Tag<br/>sharp"]
+    weather["Weather<br/>sharp"]
+    climate["Climate<br/>rank only"]
+    door["Door-B<br/>two sharp"]:::warn
+    out["One or two<br/>no ids"]:::ok
+    hold["Hold<br/>search only"]
+    frag --> door
+    tag --> door
+    weather --> door
+    climate -.-> door
+    door -->|yes| out
+    door -->|no| hold
+  end
+
+  classDef ok fill:#3c3
+  classDef accent fill:#48c
+  classDef warn fill:#c83

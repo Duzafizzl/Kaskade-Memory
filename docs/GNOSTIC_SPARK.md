@@ -2,13 +2,12 @@
 title: GNOSTIC_SPARK.md
 description: How Gnostic Spark picks a rare, privacy-aware spontaneous recall line from the memory graph.
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-11-03
 ---
 
 # Gnostic Spark
 
-Spark is a *rare* spontaneous recall: at most one short line, behind a cooldown, chosen
-because several independent cues point at the same memory, and never for sensitive memories.
+Spark is a rare spontaneous recall. It emits at most one short line, behind a cooldown, when several independent cues point at the same memory. Sensitive memories stay out.
 
 ## Pipeline
 
@@ -35,10 +34,7 @@ P=5 memories are never surfaced spontaneously; they remain searchable explicitly
 
 ## Implementation (2026-10-20)
 
-Ranking is deterministic and local: no LLM, no network. A candidate needs **at least
-two cue types** to rank. Cue type `high_engagement` is reserved for a session-intensity
-flag the pool does not emit yet. Place memories (`place` tag or `place-` theme prefix)
-enter the pool only when `allow_place=True`.
+Ranking is deterministic and local. It uses no LLM and no network. A candidate needs at least two cue types to rank. Cue type `high_engagement` is reserved for a session-intensity flag the pool does not emit yet. Place memories (`place` tag or `place-` theme prefix) enter the pool only when `allow_place=True`.
 
 ### Bayesian weights
 
@@ -62,5 +58,4 @@ Bias `-0.6`. Coherence bonus `+0.25` when `cue_types_n >= 2` and `R >= 0.55`.
 | `KASKADE_SPARK_DELIVERY` | `log` | `log` / `next_turn` / `webhook` |
 | `KASKADE_SPARK_WEBHOOK_URL` | unset | HTTPS only (localhost HTTP allowed) |
 
-`spark_day` in the EOD registry is the real rollup (`cascade_day_summary.spark_day_summary`):
-counts only, never spark text. Cards from `attribution.build_card` omit content and cue keys.
+`spark_day` in the EOD registry is the real rollup (`cascade_day_summary.spark_day_summary`). It stores counts only, never spark text. Cards from `attribution.build_card` omit content and cue keys.

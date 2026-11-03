@@ -8,7 +8,7 @@ Usage:
   python scripts/export_check.py --history --range origin/main..HEAD   # only blobs introduced in a range
 
 Created: 2026-08-28
-Last updated: 2026-10-21
+Last updated: 2026-11-03
 """
 
 from __future__ import annotations
@@ -73,6 +73,9 @@ PRIVATE_PATTERNS = [
     r"clicky_ui",
     r"mini-von-mac",
     r"macsubstrate",
+    r"substrate_auto_recall",
+    r"\bsubstrate\b",
+    r"mac[ _-]?masterplan",
     r"/users/[a-z0-9._-]+/",
     r"/volumes/",
     r"\b192\.168\.\d{1,3}\.\d{1,3}\b",
