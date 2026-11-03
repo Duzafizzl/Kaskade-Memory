@@ -3,7 +3,7 @@
 test_gnostic_spark_delivery.py – Spark delivery hooks and shadow cooldown.
 
 Created: 2026-10-20
-Last updated: 2026-10-20
+Last updated: 2026-11-03
 """
 
 from __future__ import annotations
@@ -56,6 +56,27 @@ def test_shadow_cooldown_and_p5_excluded():
     assert first["memory_id"] != "mem-hike-03"
     second = generate_spark_from_graph(agent_id="agent", seeds=["hiking-trail"], memories=demo.memories, edges=demo.edges)
     assert second is None
+
+
+def test_cooldown_ignores_monotonic_boot_epoch():
+    """Fresh hosts have time.monotonic() << cooldown; never-sparked must still fire."""
+    reset_spark_cooldown_for_tests()
+    candidates = [
+        {
+            "memory_id": "mem-boot",
+            "content": "boot epoch probe",
+            "privacy": 1,
+            "recall_inject_l1": "boot epoch probe",
+            "cues": [
+                {"type": "theme_bucket", "key": "boot"},
+                {"type": "tag", "key": "probe"},
+            ],
+        }
+    ]
+    first = maybe_generate_spark(agent_id="boot-agent", candidates=candidates, now=42.0)
+    assert first is not None
+    assert maybe_generate_spark(agent_id="boot-agent", candidates=candidates, now=100.0) is None
+    assert maybe_generate_spark(agent_id="boot-agent", candidates=candidates, now=400.0) is not None
 
 
 def test_place_only_when_allowed():

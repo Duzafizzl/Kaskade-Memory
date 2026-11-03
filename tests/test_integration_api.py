@@ -3,7 +3,7 @@
 test_integration_api.py – Release smoke tests against Postgres + FastAPI.
 
 Created: 2026-08-28
-Last updated: 2026-10-21
+Last updated: 2026-11-03
 """
 
 from __future__ import annotations
@@ -113,9 +113,9 @@ def test_spark_and_spread_simulate(client: TestClient):
     spark = client.post("/api/gnostic/spark/simulate", json={"seeds": ["hiking-trail"]})
     assert spark.status_code == 200
     payload = spark.json()["spark"]
-    if payload:
-        assert payload["memory_id"] != "mem-hike-03"
-        assert "spark_text" in payload
+    assert payload is not None
+    assert payload["memory_id"] != "mem-hike-03"
+    assert "spark_text" in payload
 
     rise = client.post(
         "/api/cascade/spread/simulate",

@@ -3,7 +3,7 @@
 shadow.py – Spark audit: rare spontaneous recall via flashback pool + rank + delivery.
 
 Created: 2026-08-28
-Last updated: 2026-10-20
+Last updated: 2026-11-03
 """
 
 from __future__ import annotations
@@ -51,8 +51,12 @@ def reset_spark_cooldown_for_tests() -> None:
 
 
 def _on_cooldown(agent_id: str, now: float) -> bool:
-    last = _last_spark.get(agent_id, 0.0)
-    return now - last < spark_cooldown_sec()
+    # Missing key = never sparked. Do not default last=0.0: time.monotonic() is
+    # seconds since boot, so on a fresh CI VM (uptime < cooldown) every agent
+    # would look hot without having emitted a spark.
+    if agent_id not in _last_spark:
+        return False
+    return now - _last_spark[agent_id] < spark_cooldown_sec()
 
 
 def _candidates_from_dicts(rows: Sequence[Dict[str, Any]]) -> List[SparkCandidate]:
